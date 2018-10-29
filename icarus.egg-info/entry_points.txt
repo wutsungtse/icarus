@@ -1,0 +1,3 @@
+[console_scripts]
+icarus = icarus.main:main
+
