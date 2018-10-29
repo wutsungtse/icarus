@@ -14,7 +14,7 @@ from icarus.scenarios.algorithms import compute_clusters, compute_p_median, depl
 
 __all__ = [
     'uniform_cache_placement',
-    'uniform_cache_placement_with_uCache', # by Leo, start from line: 44
+    'uniform_cache_placement_with_uCache', # by Leo
     'degree_centrality_cache_placement',
     'betweenness_centrality_cache_placement',
     'uniform_consolidated_cache_placement',

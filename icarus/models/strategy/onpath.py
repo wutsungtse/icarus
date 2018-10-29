@@ -173,8 +173,8 @@ class LeaveCopyEverywhere_UserAssisted(Strategy):
         self.controller.start_session(time, receiver, content, log)
 
         # Check if the receiver has already cached the content, if true, end the session and exit the method.
-        if self.view.has_cache(receiver)
-            if self.controller.get_content(receiver)
+        if self.view.has_cache(receiver):
+            if self.controller.get_content(receiver):
                 self.controller.end_session()
                 return None
                 

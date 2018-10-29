@@ -1,4 +1,4 @@
-ccC"""Performance metrics loggers
+"""Performance metrics loggers
 
 This module contains all data collectors that record events while simulations
 are being executed and compute performance metrics.

@@ -24,7 +24,7 @@ from icarus.registry import register_topology_factory
 __all__ = [
         'IcnTopology',
         'topology_tree',
-        'topology_tree_with_uCache', # by Leo, start from line: 142
+        'topology_tree_with_uCache', # by Leo
         'topology_path',
         'topology_ring',
         'topology_mesh',
@@ -159,13 +159,9 @@ def topology_tree_with_uCache(k, h, delay=1, **kwargs):
         The topology object
     """
     topology = fnss.k_ary_tree_topology(k, h)
-    receivers = [v for v in topology.nodes_iter()
-                 if topology.node[v]['depth'] == h]
-    sources = [v for v in topology.nodes_iter()
-               if topology.node[v]['depth'] == 0]
-    routers = [v for v in topology.nodes_iter()
-              if topology.node[v]['depth'] > 0
-              and topology.node[v]['depth'] < h]
+    receivers = [v for v in topology.nodes_iter() if topology.node[v]['depth'] == h]
+    sources = [v for v in topology.nodes_iter() if topology.node[v]['depth'] == 0]
+    routers = [v for v in topology.nodes_iter() if topology.node[v]['depth'] > 0 and topology.node[v]['depth'] < h]
 
     topology.graph['icr_candidates'] = set(routers)
     topology.graph['uCache_candidates'] = set(receivers)
