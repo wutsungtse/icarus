@@ -9,9 +9,6 @@ CURR_DIR=`pwd`
 # Icarus main folder
 ICARUS_DIR=${CURR_DIR}/../..
 
-# Dir where plots will be saved 
-PLOTS_DIR=${CURR_DIR}/plots
-
 # Config file
 CONFIG_FILE=${CURR_DIR}/config.py
 
@@ -24,7 +21,3 @@ export PYTHONPATH=${ICARUS_DIR}:$PYTHONPATH
 # Run experiments
 echo "Run experiments"
 icarus run --results ${RESULTS_FILE} ${CONFIG_FILE}
-
-# Plot results
-echo "Plot results"
-python ${CURR_DIR}/plotresults.py --results ${RESULTS_FILE} --output ${PLOTS_DIR} ${CONFIG_FILE} 

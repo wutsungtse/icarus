@@ -1,6 +1,9 @@
 CONTRIBUTING.md
 LICENSE.txt
 README.md
+examples/2018.10.30/config.py
+examples/2018.10.30/plotresults.py
+examples/2018.10.30/run.sh
 examples/lce-vs-probcache/config.py
 examples/lce-vs-probcache/run.sh
 examples/offpath-vs-onpath-caching/config.py
