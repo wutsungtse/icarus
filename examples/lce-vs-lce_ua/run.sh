@@ -12,7 +12,7 @@ ICARUS_DIR=${CURR_DIR}/../..
 # Config file
 CONFIG_FILE=${CURR_DIR}/config.py
 
-# FIle where results will be saved
+# File where results will be saved
 RESULTS_FILE=${CURR_DIR}/results.pickle
 
 # Add Icarus code to PYTHONPATH
