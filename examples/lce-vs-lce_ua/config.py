@@ -263,6 +263,13 @@ ALPHA = [0.6, 0.8, 1.0, 1.2, 1.4]
 # Remove sizes not needed
 NETWORK_CACHE = [0.004, 0.002]
 
+# Total cache budget
+# [nCache_budget, uCache_budget]
+
+CACHE_BUDGETS = [[100, 0], # nCache only
+                [100, 100], # Both nCache and uCache
+                [0, 100], # uCache only
+              ]
 
 # List of topologies tested
 # Topology implementations are located in ./icarus/scenarios/topology.py
@@ -292,9 +299,7 @@ default['workload'] = {'name':       'STATIONARY',
                        'n_measured': N_MEASURED_REQUESTS,
                        'rate':       REQ_RATE}
 
-default['cache_placement'] = {'name':           'UNIFORM_with_uCache',
-                              'nCache_budget':  50,
-                              'uCache_budget':  50,}
+default['cache_placement']['name'] = 'UNIFORM_with_uCache'
 
 default['content_placement']['name'] = 'UNIFORM'
 
@@ -308,11 +313,14 @@ default['topology'] = { 'name':     'TREE_with_uCache',
 for alpha in ALPHA:
     for strategy in STRATEGIES:
         for topology in TOPOLOGIES:
+          for cache_budget in CACHE_BUDGETS:
             for network_cache in NETWORK_CACHE:
                 experiment = copy.deepcopy(default)
                 experiment['workload']['alpha'] = alpha
                 experiment['strategy']['name'] = strategy
                 experiment['topology']['name'] = topology
+                experiment['cache_placement']['nCache_budget'] = cache_budget[0]
+                experiment['cache_placement']['uCache_budget'] = cache_budget[1]
                 experiment['cache_placement']['network_cache'] = network_cache
                 experiment['desc'] = "Alpha: %s, strategy: %s, topology: %s, network cache: %s" \
                                      % (str(alpha), strategy, topology, str(network_cache))
