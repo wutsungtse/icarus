@@ -376,17 +376,20 @@ class NetworkModel(object):
             if stack_name == 'router':
                 if 'cache_size' in stack_props:
                     cache_size[node] = stack_props['cache_size']
+            elif stack_name == 'receiver':
+                if 'cache_size' in stack_props:
+                    cache_size[node] = stack_props['cache_size']
             elif stack_name == 'source':
                 contents = stack_props['contents']
                 self.source_node[node] = contents
                 for content in contents:
                     self.content_source[content] = node
-        if any(c < 1 for c in cache_size.values()):
-            logger.warn('Some content caches have size equal to 0. '
-                        'I am setting them to 1 and run the experiment anyway')
-            for node in cache_size:
-                if cache_size[node] < 1:
-                    cache_size[node] = 1
+        #if any(c < 1 for c in cache_size.values()):
+        #    logger.warn('Some content caches have size equal to 0. '
+        #                'I am setting them to 1 and run the experiment anyway')
+        #    for node in cache_size:
+        #        if cache_size[node] < 1:
+        #            cache_size[node] = 1
 
         policy_name = cache_policy['name']
         policy_args = {k: v for k, v in cache_policy.items() if k != 'name'}

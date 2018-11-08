@@ -222,7 +222,7 @@ RESULTS_FORMAT = 'PICKLE'
 
 # Number of times each experiment is replicated
 # This is necessary for extracting confidence interval of selected metrics
-N_REPLICATIONS = 3
+N_REPLICATIONS = 1
 
 # List of metrics to be measured in the experiments
 # The implementation of data collectors are located in ./icaurs/execution/collectors.py
@@ -257,19 +257,23 @@ REQ_RATE = 1.0
 CACHE_POLICY = 'LRU'
 
 # Zipf alpha parameter, remove parameters not needed
-ALPHA = [0.6, 0.8, 1.0, 1.2, 1.4]
+ALPHA = [1.0]
 
 # Total size of network cache as a fraction of content population
 # Remove sizes not needed
-NETWORK_CACHE = [0.004, 0.002]
+NETWORK_CACHE = [ 0.001, 0.005, #10e-3
+                  0.01, 0.05,   #10e-2
+                  0.1, 0.5,     #10e-1
+                  1,            #10e-0
+                ]
 
 # Total cache budget
-# [nCache_budget, uCache_budget]
+# cache_budget = [nCache_budget, uCache_budget]
 
-CACHE_BUDGETS = [[100, 0], # nCache only
-                [100, 100], # Both nCache and uCache
-                [0, 100], # uCache only
-              ]
+CACHE_BUDGET_FACTORS = [ [1.0, 0], # nCache only
+                         [1.0, 1.0], # Both nCache and uCache
+                         [0, 1.0],# uCache only
+                ]
 
 # List of topologies tested
 # Topology implementations are located in ./icarus/scenarios/topology.py
@@ -283,8 +287,8 @@ TOPOLOGIES = [
 # Remove strategies not needed
 STRATEGIES = [
     'LCE',                 # Leave Copy Everywhere
-    'LCE_UserAssisted',    # Leave Copy Everywhere User Assisted
-    'NO_CACHE',            # No caching, shortest-path routing
+    # 'LCE_UserAssisted',    # Leave Copy Everywhere User-Assisted
+    # 'NO_CACHE',            # No caching, shortest-path routing
 ]
 
 # Instantiate experiment queue
@@ -313,15 +317,15 @@ default['topology'] = { 'name':     'TREE_with_uCache',
 for alpha in ALPHA:
     for strategy in STRATEGIES:
         for topology in TOPOLOGIES:
-          for cache_budget in CACHE_BUDGETS:
+          for cache_budget_factor in CACHE_BUDGET_FACTORS:
             for network_cache in NETWORK_CACHE:
                 experiment = copy.deepcopy(default)
                 experiment['workload']['alpha'] = alpha
                 experiment['strategy']['name'] = strategy
                 experiment['topology']['name'] = topology
-                experiment['cache_placement']['nCache_budget'] = cache_budget[0]
-                experiment['cache_placement']['uCache_budget'] = cache_budget[1]
+                experiment['cache_placement']['nCache_budget'] = cache_budget_factor[0] * N_CONTENTS * network_cache
+                experiment['cache_placement']['uCache_budget'] = cache_budget_factor[1] * N_CONTENTS * network_cache
                 experiment['cache_placement']['network_cache'] = network_cache
-                experiment['desc'] = "Alpha: %s, strategy: %s, topology: %s, network cache: %s" \
-                                     % (str(alpha), strategy, topology, str(network_cache))
+                experiment['desc'] = "strategy: %s, network cache: %s" \
+                                     % (strategy, str(network_cache))
                 EXPERIMENT_QUEUE.append(experiment)
