@@ -257,14 +257,15 @@ REQ_RATE = 1.0
 CACHE_POLICY = 'LRU'
 
 # Zipf alpha parameter, remove parameters not needed
-ALPHA = [1.0]
+ALPHA = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 
 # Total size of network cache as a fraction of content population
 # Remove sizes not needed
-NETWORK_CACHE = [ 0.001, 0.005, #10e-3
-                  0.01, 0.05,   #10e-2
-                  0.1, 0.5,     #10e-1
-                  1,            #10e-0
+NETWORK_CACHE = [ # 0.001, 0.005,
+                  # 0.01, 0.05,
+                  0.1,
+                  #0.5,
+                  #1,
                 ]
 
 # Total cache budget
@@ -286,8 +287,8 @@ TOPOLOGIES = [
 # The code is located in ./icarus/models/strategy/*.py
 # Remove strategies not needed
 STRATEGIES = [
-    'LCE',                 # Leave Copy Everywhere
-    # 'LCE_UserAssisted',    # Leave Copy Everywhere User-Assisted
+    # 'LCE',                 # Leave Copy Everywhere
+    'LCE_UserAssisted',      # Leave Copy Everywhere User-Assisted
     # 'NO_CACHE',            # No caching, shortest-path routing
 ]
 
