@@ -84,7 +84,7 @@ Tree topology
     * k: branching factor
 
 RocketFuel topologies
- * name: ROCKET_FUEL
+ * name: ROCKET_FUEL, ROCKET_FUEL_with_uCache
  * args:
      * asn: ASN of topology selected (see resources/README.md for further info)
      * source_ratio: ratio of nodes to which attach a content source
@@ -92,7 +92,7 @@ RocketFuel topologies
 
 Internet Topology Zoo topologies
  * name: GARR, GEANT, TISCALI, WIDE, GEANT_2, GARR_2, TISCALI_2
- * args: None
+ * args: Nones
 
 
 workload
@@ -134,6 +134,7 @@ cache_placement
 ---------------
  * name:
     * UNIFORM -> cache space uniformly spread across caches
+    * UNIFORM_with_uCache -> cache space uniformly spread across caches
     * CONSOLIDATED -> cache space consolidated among nodes with top betweenness centrality
     * BETWEENNESS_CENTRALITY -> cache space assigned to all candidate nodes proportionally to their betweenness centrality
     * DEGREE -> cache space assigned to all candidate nodes proportionally to their degree
@@ -147,18 +148,19 @@ cache_placement
 strategy
 --------
  * name:
-    * LCE             ->  Leave Copy Everywhere
-    * NO_CACHE        ->  No caching, shorest-path routing
-    * HR_SYMM         ->  Symmetric hash-routing
-    * HR_ASYMM        ->  Asymmetric hash-routing
-    * HR_MULTICAST    ->  Multicast hash-routing
-    * HR_HYBRID_AM    ->  Hybrid Asymm-Multicast hash-routing
-    * HR_HYBRID_SM    ->  Hybrid Symm-Multicast hash-routing
-    * CL4M            ->  Cache less for more
-    * PROB_CACHE      ->  ProbCache
-    * LCD             ->  Leave Copy Down
-    * RAND_CHOICE     ->  Random choice: cache in one random cache on path
-    * RAND_BERNOULLI  ->  Random Bernoulli: cache randomly in caches on path
+    * LCE               ->  Leave Copy Everywhere
+    * LCE_UserAssisted  ->  Leave Copy Everywhere User-Assisted
+    * NO_CACHE          ->  No caching, shorest-path routing
+    * HR_SYMM           ->  Symmetric hash-routing
+    * HR_ASYMM          ->  Asymmetric hash-routing
+    * HR_MULTICAST      ->  Multicast hash-routing
+    * HR_HYBRID_AM      ->  Hybrid Asymm-Multicast hash-routing
+    * HR_HYBRID_SM      ->  Hybrid Symm-Multicast hash-routing
+    * CL4M              ->  Cache less for more
+    * PROB_CACHE        ->  ProbCache
+    * LCD               ->  Leave Copy Down
+    * RAND_CHOICE       ->  Random choice: cache in one random cache on path
+    * RAND_BERNOULLI    ->  Random Bernoulli: cache randomly in caches on path
  * args:
     * For PROB_CACHE
        * t_tw : float, optional, default=10. The ProbCache t_tw parameter
@@ -264,8 +266,8 @@ ALPHA = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 NETWORK_CACHE = [ # 0.001, 0.005,
                   # 0.01, 0.05,
                   0.1,
-                  #0.5,
-                  #1,
+                  # 0.5,
+                  # 1,
                 ]
 
 # Total cache budget
@@ -280,7 +282,7 @@ CACHE_BUDGET_FACTORS = [ [1.0, 0], # nCache only
 # Topology implementations are located in ./icarus/scenarios/topology.py
 # Remove topologies not needed
 TOPOLOGIES = [
-    'TREE_with_uCache',
+    'ROCKET_FUEL_with_uCache',
 ]
 
 # List of caching and routing strategies
@@ -310,9 +312,10 @@ default['content_placement']['name'] = 'UNIFORM'
 
 default['cache_policy']['name'] = CACHE_POLICY
 
-default['topology'] = { 'name':     'TREE_with_uCache',
-                        'k':        2,
-                        'h':        3,}
+default['topology'] = { 'name': 'ROCKET_FUEL_with_uCache',
+                        'asn':  3257,  # Tiscali (Europe)
+                        # 'ext_delay' = 34,
+                      }
 
 # Create experiments multiplexing all desired parameters
 for alpha in ALPHA:
