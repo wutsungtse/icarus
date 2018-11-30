@@ -76,6 +76,28 @@ class NetworkView(object):
                              'NetworkModel')
         self.model = model
 
+
+    def is_cache_full(self, node):
+        if node in self.model.cache:
+            if self.model.cache[node].__len__ == self.model.cache[node].maxlen:
+                return True
+            else:
+                return False
+
+    def number_of_times_being_downloaded(self, content):
+        """Return the number of times which the content has been downloaded """
+        if content in self.model.download_table:
+            return self.model.download_table[content]
+        else:
+            return 0
+
+    def number_of_times_being_cached(self, content):
+        """Return the number of times which the content has been cached """
+        if content in self.model.cache_table:
+            return self.model.cache_table[content]
+        else:
+            return 0
+
     def content_locations(self, k):
         """Return a set of all current locations of a specific content.
 
@@ -397,6 +419,12 @@ class NetworkModel(object):
         self.cache = {node: CACHE_POLICY[policy_name](cache_size[node], **policy_args)
                           for node in cache_size}
 
+        # Global Content-Download Information (Key=content, Value=number of downloads)
+        self.download_table = {}
+
+        # Global Content-Caching Information (Key=content, Value=number of times being cached)
+        self.cache_table = {}
+
         # This is for a local un-coordinated cache (currently used only by
         # Hashrouting with edge cache)
         self.local_cache = {}
@@ -447,6 +475,12 @@ class NetworkController(object):
     def detach_collector(self):
         """Detach the data collector."""
         self.collector = None
+
+
+    def remove_random_content(self, node):
+        if node in self.model.cache:
+            random_content = random.choice(self.model.cache[node])
+            self.model.cache[node].remove(random_content)
 
     def start_session(self, timestamp, receiver, content, log):
         """Instruct the controller to start a new session (i.e. the retrieval
@@ -568,6 +602,12 @@ class NetworkController(object):
             The evicted object or *None* if no contents were evicted.
         """
         if node in self.model.cache:
+            # Update the content-cache table
+            if self.session['content'] not in self.model.cache[node].dump():
+                if self.session['content'] in self.model.cache_table:
+                    self.model.cache_table[self.session['content']] += 1
+                else:
+                    self.model.cache_table[self.session['content']] = 1
             return self.model.cache[node].put(self.session['content'])
 
     def get_content(self, node):
@@ -583,11 +623,17 @@ class NetworkController(object):
         content : bool
             True if the content is available, False otherwise
         """
+
         if node in self.model.cache:
             cache_hit = self.model.cache[node].get(self.session['content'])
             if cache_hit:
                 if self.session['log']:
                     self.collector.cache_hit(node)
+                # Update the content-download table
+                if self.session['content'] in self.model.download_table:
+                    self.model.download_table[self.session['content']] += 1
+                else:
+                    self.model.download_table[self.session['content']] = 1
             else:
                 if self.session['log']:
                     self.collector.cache_miss(node)
@@ -596,6 +642,11 @@ class NetworkController(object):
         if name == 'source' and self.session['content'] in props['contents']:
             if self.collector is not None and self.session['log']:
                 self.collector.server_hit(node)
+            # Update the content-download table
+            if self.session['content'] in self.model.download_table:
+                self.model.download_table[self.session['content']] += 1
+            else:
+                self.model.download_table[self.session['content']] = 1
             return True
         else:
             return False
@@ -615,6 +666,10 @@ class NetworkController(object):
         """
         if node in self.model.cache:
             return self.model.cache[node].remove(self.session['content'])
+
+    def remove_specific_content(self, node, content):
+        if node in self.model.cache:
+            return self.model.cache[node].remove(content)
 
     def end_session(self, success=True):
         """Close a session

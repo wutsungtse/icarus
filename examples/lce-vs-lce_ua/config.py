@@ -232,8 +232,8 @@ N_REPLICATIONS = 1
 DATA_COLLECTORS = [
            'CACHE_HIT_RATIO',  # Measure cache hit ratio
            'LATENCY',  # Measure request and response latency (based on static link delays)
-           'LINK_LOAD',  # Measure link loads
-           'PATH_STRETCH',  # Measure path stretch
+           #'LINK_LOAD',  # Measure link loads
+           #'PATH_STRETCH',  # Measure path stretch
                    ]
 
 
@@ -250,7 +250,7 @@ N_CONTENTS = 3 * 10 ** 5
 N_WARMUP_REQUESTS = 3 * 10 ** 5
 
 # Number of content requests that are measured after warmup
-N_MEASURED_REQUESTS = 6 * 10 ** 5
+N_MEASURED_REQUESTS = 9 * 10 ** 5
 
 # Number of requests per second (over the whole network)
 REQ_RATE = 1.0
@@ -259,30 +259,26 @@ REQ_RATE = 1.0
 CACHE_POLICY = 'LRU'
 
 # Zipf alpha parameter, remove parameters not needed
-ALPHA = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+ALPHA = [1.0]
 
 # Total size of network cache as a fraction of content population
 # Remove sizes not needed
-NETWORK_CACHE = [ # 0.001, 0.005,
-                  # 0.01, 0.05,
-                  0.1,
-                  # 0.5,
-                  # 1,
-                ]
+NETWORK_CACHE = [0, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 
 # Total cache budget
 # cache_budget = [nCache_budget, uCache_budget]
 
-CACHE_BUDGET_FACTORS = [ [1.0, 0], # nCache only
-                         [1.0, 1.0], # Both nCache and uCache
-                         [0, 1.0],# uCache only
+CACHE_BUDGET_FACTORS = [ #[1.0, 0], # nCache only
+                         #[1.0, 1.0], # Both nCache and uCache
+                         [0, 1.0], # uCache only
                 ]
 
 # List of topologies tested
 # Topology implementations are located in ./icarus/scenarios/topology.py
 # Remove topologies not needed
 TOPOLOGIES = [
-    'ROCKET_FUEL_with_uCache',
+	#'TREE_with_uCache'
+  'ROCKET_FUEL_with_uCache',
 ]
 
 # List of caching and routing strategies
@@ -290,8 +286,11 @@ TOPOLOGIES = [
 # Remove strategies not needed
 STRATEGIES = [
     # 'LCE',                 # Leave Copy Everywhere
-    'LCE_UserAssisted',      # Leave Copy Everywhere User-Assisted
-    # 'NO_CACHE',            # No caching, shortest-path routing
+    # 'LCE_USER_ASSISTED',   # Leave Copy Everywhere User-Assisted
+    # 'C_RANDOM',
+    # 'C_RANDOM_P2P',
+    'C_LFR_P2P',           # Centralised Largest Future Request First P2P
+    'C_LCF_P2P',           # Centralised Least Cached First P2P
 ]
 
 # Instantiate experiment queue
@@ -314,7 +313,6 @@ default['cache_policy']['name'] = CACHE_POLICY
 
 default['topology'] = { 'name': 'ROCKET_FUEL_with_uCache',
                         'asn':  3257,  # Tiscali (Europe)
-                        # 'ext_delay' = 34,
                       }
 
 # Create experiments multiplexing all desired parameters
@@ -327,7 +325,7 @@ for alpha in ALPHA:
                 experiment['workload']['alpha'] = alpha
                 experiment['strategy']['name'] = strategy
                 experiment['topology']['name'] = topology
-                experiment['cache_placement']['nCache_budget'] = cache_budget_factor[0] * N_CONTENTS * network_cache
+                experiment['cache_placement']['nCache_budget'] = cache_budget_factor[0] * N_CONTENTS * 0.01
                 experiment['cache_placement']['uCache_budget'] = cache_budget_factor[1] * N_CONTENTS * network_cache
                 experiment['cache_placement']['network_cache'] = network_cache
                 experiment['desc'] = "strategy: %s, network cache: %s" \
