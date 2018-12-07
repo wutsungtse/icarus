@@ -230,8 +230,11 @@ N_REPLICATIONS = 1
 # The implementation of data collectors are located in ./icaurs/execution/collectors.py
 # Remove collectors not needed
 DATA_COLLECTORS = [
-           'CACHE_HIT_RATIO',  # Measure cache hit ratio
-           'LATENCY',  # Measure request and response latency (based on static link delays)
+           # 'CACHE_HIT_RATIO',  # Measure cache hit ratio
+           # 'LATENCY',  # Measure request and response latency (based on static link delays)
+           'OVERHEAD_DISTRIBUTION',
+           # 'CACHE_EVICTION',
+           # 'CACHING_EFFICIENCY'
            #'LINK_LOAD',  # Measure link loads
            #'PATH_STRETCH',  # Measure path stretch
                    ]
@@ -277,8 +280,8 @@ CACHE_BUDGET_FACTORS = [ #[1.0, 0], # nCache only
 # Topology implementations are located in ./icarus/scenarios/topology.py
 # Remove topologies not needed
 TOPOLOGIES = [
-	#'TREE_with_uCache'
-  'ROCKET_FUEL_with_uCache',
+	#'TREE_WITH_UCACHE'
+  'ROCKET_FUEL_WITH_UCACHE',
 ]
 
 # List of caching and routing strategies
@@ -288,7 +291,7 @@ STRATEGIES = [
     # 'LCE',                 # Leave Copy Everywhere
     # 'LCE_USER_ASSISTED',   # Leave Copy Everywhere User-Assisted
     # 'C_RANDOM',
-    # 'C_RANDOM_P2P',
+    'C_RANDOM_P2P',
     'C_LFR_P2P',           # Centralised Largest Future Request First P2P
     'C_LCF_P2P',           # Centralised Least Cached First P2P
 ]

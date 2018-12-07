@@ -140,7 +140,7 @@ def topology_tree(k, h, delay=1, **kwargs):
         topology.edge[u][v]['type'] = 'internal'
     return IcnTopology(topology)
 
-@register_topology_factory('TREE_with_uCache')
+@register_topology_factory('TREE_WITH_UCACHE')
 def topology_tree_with_uCache(k, h, delay=1, **kwargs):
     """Returns a tree topology, with a source at the root, receivers at the
     leafs and caches at the receivers and routers.
@@ -811,7 +811,7 @@ def topology_rocketfuel_latency(asn, source_ratio=0.1, ext_delay=EXTERNAL_LINK_D
         fnss.add_stack(topology, v, 'router')
     return IcnTopology(topology)
 
-@register_topology_factory('ROCKET_FUEL_with_uCache')
+@register_topology_factory('ROCKET_FUEL_WITH_UCACHE')
 def topology_rocketfuel_latency_with_uCache(asn, source_ratio=0.1, ext_delay=EXTERNAL_LINK_DELAY, **kwargs):
     """Parse a generic RocketFuel topology with annotated latencies
 

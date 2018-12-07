@@ -13,6 +13,7 @@ The `NetworkController` is also responsible to notify a `DataCollectorProxy`
 of all relevant events.
 """
 import logging
+import random
 
 import networkx as nx
 import fnss
@@ -76,13 +77,16 @@ class NetworkView(object):
                              'NetworkModel')
         self.model = model
 
-
     def is_cache_full(self, node):
         if node in self.model.cache:
-            if self.model.cache[node].__len__ == self.model.cache[node].maxlen:
+            current_len = self.model.cache[node].__len__()
+            max_len = self.model.cache[node]._maxlen
+            if current_len == max_len:
                 return True
-            else:
+            elif current_len < max_len:
                 return False
+            else:
+                print "ERROR!"
 
     def number_of_times_being_downloaded(self, content):
         """Return the number of times which the content has been downloaded """
@@ -476,12 +480,6 @@ class NetworkController(object):
         """Detach the data collector."""
         self.collector = None
 
-
-    def remove_random_content(self, node):
-        if node in self.model.cache:
-            random_content = random.choice(self.model.cache[node])
-            self.model.cache[node].remove(random_content)
-
     def start_session(self, timestamp, receiver, content, log):
         """Instruct the controller to start a new session (i.e. the retrieval
         of a content).
@@ -665,10 +663,21 @@ class NetworkController(object):
             *True* if the entry was in the cache, *False* if it was not.
         """
         if node in self.model.cache:
+            if self.session['log']:
+                self.collector.cache_evict(node)
             return self.model.cache[node].remove(self.session['content'])
 
-    def remove_specific_content(self, node, content):
+    def remove_content_by_random(self, node):
         if node in self.model.cache:
+            if self.session['log']:
+                self.collector.cache_evict(node)
+            content = random.choice(self.model.cache[node].dump())
+            return self.model.cache[node].remove(content)
+
+    def remove_content_by_choice(self, node, content):
+        if node in self.model.cache:
+            if self.session['log']:
+                self.collector.cache_evict(node)
             return self.model.cache[node].remove(content)
 
     def end_session(self, success=True):

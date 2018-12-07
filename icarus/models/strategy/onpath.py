@@ -10,14 +10,14 @@ from icarus.util import inheritdoc, path_links
 from .base import Strategy
 
 __all__ = [
-       'Centralised_LeastCachedFirst_P2P', # Last Modified: 2018.11.30
-       'Centralised_LargestFutureRequestFirst_P2P', # Last Modified: 2018.11.30
-       'Centralised_Random', # Last Modified: 2018.11.29
-       'Centralised_Random_P2P', # Last Modified: 2018.11.29
+       'Centralised_LeastCachedFirst_P2P', # Last Modified: 2018.12.05
+       'Centralised_LargestFutureRequestFirst_P2P', # Last Modified: 2018.12.05
+       'Centralised_Random', # Last Modified: 2018.12.05
+       'Centralised_Random_P2P', # Last Modified: 2018.12.05
        'Partition',
        'Edge',
        'LeaveCopyEverywhere',
-       'LeaveCopyEverywhere_UserAssisted', # # Last Modified: 2018.10.29
+       'LeaveCopyEverywhere_UserAssisted', # Last Modified: 2018.10.29
        'LeaveCopyDown',
        'ProbCache',
        'CacheLessForMore',
@@ -63,21 +63,20 @@ class Centralised_LeastCachedFirst_P2P(Strategy):
         # Forward the content back to receiver along the path.
         for u, v in path_links(path):
             self.controller.forward_content_hop(u, v)
-        # If receiver's cache is full, evict the least cached content.
+        # If receiver's cache is full, evict the most cached content.
         if self.view.is_cache_full(receiver):
             content_to_be_evicted = content
-            minimum = self.view.number_of_times_being_cached(content_to_be_evicted)
-            # Iterate through 'cached_content' and find the content being least cached.
-            # Note: We already know that the receiver does not have the session content in its cache.
+            maximum = self.view.number_of_times_being_cached(content_to_be_evicted)
+            # Find the content being most cached.
             cache_dump = self.view.cache_dump(receiver)
             for cached_content in cache_dump:
-                if self.view.number_of_times_being_cached(cached_content) <= minimum:
-                    minimum = self.view.number_of_times_being_cached(cached_content)
+                if self.view.number_of_times_being_cached(cached_content) > maximum:
+                    maximum = self.view.number_of_times_being_cached(cached_content)
                     content_to_be_evicted = cached_content
-            # If the content (being least cached) is not the session content, evict the cached content (being least cached),
-            # else if the content (being least cached) is the session content, simply do nothing and end the session.
+            # If the content (being most cached) is not the session content, evict the cached content (being most cached),
+            # else if the content (being most cached) is the session content, simply do nothing and end the session.
             if content_to_be_evicted != content:
-                self.controller.remove_specific_content(receiver, content_to_be_evicted)
+                self.controller.remove_content_by_choice(receiver, content_to_be_evicted)
                 self.controller.put_content(receiver)
         else:
             self.controller.put_content(receiver)
@@ -122,61 +121,23 @@ class Centralised_LargestFutureRequestFirst_P2P(Strategy):
         # Forward the content back to receiver along the path.
         for u, v in path_links(path):
             self.controller.forward_content_hop(u, v)
-        # If receiver's cache is full, evict the least downloaded content.
+        # If receiver's cache is full, evict the most downloaded content.
         if self.view.is_cache_full(receiver):
             content_to_be_evicted = content
-            minimum = self.view.number_of_times_being_downloaded(content_to_be_evicted)
-            # Iterate through 'cached_content' and find the content with most downloads.
-            # Note: We already know that the receiver does not have the session content in its cache.
+            maximum = self.view.number_of_times_being_downloaded(content_to_be_evicted)
+            # Find the content with most downloads.
             cache_dump = self.view.cache_dump(receiver)
             for cached_content in cache_dump:
-                if self.view.number_of_times_being_downloaded(cached_content) <= minimum:
-                    minimum = self.view.number_of_times_being_downloaded(cached_content)
+                if self.view.number_of_times_being_downloaded(cached_content) > maximum:
+                    maximum = self.view.number_of_times_being_downloaded(cached_content)
                     content_to_be_evicted = cached_content
-            # If the content (with least downloads) is not the session content, evict the cached content (with least downloads).
-            # Else if the content (with least downloads) is the session content, simply do nothing and end the session.
+            # If the content (with most downloads) is not the session content, evict the cached content (with most downloads).
+            # Else if the content (with most downloads) is the session content, simply do nothing and end the session.
             if content_to_be_evicted != content:
-                self.controller.remove_specific_content(receiver, content_to_be_evicted)
+                self.controller.remove_content_by_choice(receiver, content_to_be_evicted)
                 self.controller.put_content(receiver)
         else:
             self.controller.put_content(receiver)
-        # End session
-        self.controller.end_session()
-
-@register_strategy('C_RANDOM')
-class Centralised_Random(Strategy):
-
-    @inheritdoc(Strategy)
-    def __init__(self, view, controller, **kwargs):
-        super(Centralised_Random, self).__init__(view, controller)
-
-    @inheritdoc(Strategy)
-    def process_event(self, time, receiver, content, log):
-        # Get all required data
-        source = self.view.content_source(content)
-        path = self.view.shortest_path(receiver, source)
-        # Start session
-        self.controller.start_session(time, receiver, content, log)
-        # Check if the receiver has already cached the content, if true, end the session and exit the method.
-        if self.view.has_cache(receiver):
-            if self.controller.get_content(receiver):
-                self.controller.end_session()
-                return None
-        # Receiver does not cache the content, route requests to source.
-        for u, v in path_links(path):
-            self.controller.forward_request_hop(u, v)
-            # Get content from source
-        self.controller.get_content(source)
-        # Return content
-        path = list(reversed(path))
-        # Forward the content along the path.
-        for u, v in path_links(path):
-            self.controller.forward_content_hop(u, v)
-        # If cache (at receiver) is full, evict a content by random.
-        if self.view.is_cache_full(receiver):
-            self.controller.remove_random_content(receiver)
-        # Insert content.
-        self.controller.put_content(receiver)
         # End session
         self.controller.end_session()
 
@@ -219,7 +180,44 @@ class Centralised_Random_P2P(Strategy):
             self.controller.forward_content_hop(u, v)
         # If cache (at receiver) is full, evict a content by random.
         if self.view.is_cache_full(receiver):
-            self.controller.remove_random_content(receiver)
+            self.controller.remove_content_by_random(receiver)
+        # Insert content.
+        self.controller.put_content(receiver)
+        # End session
+        self.controller.end_session()
+
+@register_strategy('C_RANDOM')
+class Centralised_Random(Strategy):
+
+    @inheritdoc(Strategy)
+    def __init__(self, view, controller, **kwargs):
+        super(Centralised_Random, self).__init__(view, controller)
+
+    @inheritdoc(Strategy)
+    def process_event(self, time, receiver, content, log):
+        # Get all required data
+        source = self.view.content_source(content)
+        path = self.view.shortest_path(receiver, source)
+        # Start session
+        self.controller.start_session(time, receiver, content, log)
+        # Check if the receiver has already cached the content, if true, end the session and exit the method.
+        if self.view.has_cache(receiver):
+            if self.controller.get_content(receiver):
+                self.controller.end_session()
+                return None
+        # Receiver does not cache the content, route requests to source.
+        for u, v in path_links(path):
+            self.controller.forward_request_hop(u, v)
+            # Get content from source
+        self.controller.get_content(source)
+        # Return content
+        path = list(reversed(path))
+        # Forward the content along the path.
+        for u, v in path_links(path):
+            self.controller.forward_content_hop(u, v)
+        # If cache (at receiver) is full, evict a content by random.
+        if self.view.is_cache_full(receiver):
+            self.controller.remove_content_by_random(receiver)
         # Insert content.
         self.controller.put_content(receiver)
         # End session

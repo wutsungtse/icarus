@@ -11,6 +11,7 @@ inheriting from the `DataCollector` class and override all required methods.
 """
 from __future__ import division
 import collections
+import numpy as np
 
 from icarus.registry import register_data_collector
 from icarus.tools import cdf
@@ -19,6 +20,9 @@ from icarus.util import Tree, inheritdoc
 
 __all__ = [
     'DataCollector',
+    #'CachingEfficiencyCollector', (to be implemented)
+    'CacheEvictionCollector', # Last modiefied: 2018.12.06
+    'OverheadDistributionCollector', # Last modified: 2018.12.06
     'CollectorProxy',
     'CacheHitRatioCollector',
     'LinkLoadCollector',
@@ -71,6 +75,9 @@ class DataCollector(object):
         node : any hashable type
             The node whose cache served the content
         """
+        pass
+
+    def cache_evict(self, node):
         pass
 
     def cache_miss(self, node):
@@ -149,6 +156,41 @@ class DataCollector(object):
             Dictionary mapping metric with results.
         """
         pass
+
+@register_data_collector('CACHE_EVICTION')
+class CacheEvictionCollector(DataCollector):
+    def __init__(self, view):
+        self.view = view
+        self.cache_evictions = collections.defaultdict(int)
+
+    @inheritdoc(DataCollector)
+    def cache_evict(self, node):
+        self.cache_evictions[node] += 1
+
+    @inheritdoc(DataCollector)
+    def results(self):
+        sample = self.cache_evictions.values()
+        mean = sum(sample)/float(len(sample)) \
+                if len(sample) > 0 else 0
+        results = Tree({'MEAN': mean})
+        return results
+
+@register_data_collector('OVERHEAD_DISTRIBUTION')
+class OverheadDistributionCollector(DataCollector):
+    def __init__(self, view):
+        self.view = view
+        self.cache_hits = collections.defaultdict(int)
+
+    @inheritdoc(DataCollector)
+    def cache_hit(self, node):
+        self.cache_hits[node] += 1
+
+    @inheritdoc(DataCollector)
+    def results(self):
+        sample = self.cache_hits.values()
+        cv = np.std(sample)/np.mean(sample)
+        results = Tree({'COEFFICIENT OF VARIATION': cv})
+        return results
 
 # Note: The implementation of CollectorProxy could be improved to avoid having
 # to rewrite almost identical methods, for example by playing with __dict__
@@ -416,13 +458,13 @@ class CacheHitRatioCollector(DataCollector):
             cont_hits = dict((i, (self.cont_cache_hits[i] / (self.cont_cache_hits[i] + self.cont_serv_hits[i])))
                             for i in cont_set)
             results['PER_CONTENT'] = cont_hits
-        if self.per_node:
-            for v in self.per_node_cache_hits:
-                self.per_node_cache_hits[v] /= n_sess
-            for v in self.per_node_server_hits:
-                self.per_node_server_hits[v] /= n_sess
-            results['PER_NODE_CACHE_HIT_RATIO'] = self.per_node_cache_hits
-            results['PER_NODE_SERVER_HIT_RATIO'] = self.per_node_server_hits
+        # if self.per_node:
+        #     for v in self.per_node_cache_hits:
+        #         self.per_node_cache_hits[v] /= n_sess
+        #     for v in self.per_node_server_hits:
+        #         self.per_node_server_hits[v] /= n_sess
+        #     results['PER_NODE_CACHE_HIT_RATIO'] = self.per_node_cache_hits
+        #     results['PER_NODE_SERVER_HIT_RATIO'] = self.per_node_server_hits
         return results
 
 
