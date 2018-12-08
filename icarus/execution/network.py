@@ -14,6 +14,7 @@ of all relevant events.
 """
 import logging
 import random
+import collections
 
 import networkx as nx
 import fnss
@@ -88,14 +89,14 @@ class NetworkView(object):
             else:
                 print "ERROR!"
 
-    def number_of_times_being_downloaded(self, content):
+    def download_counts(self, content):
         """Return the number of times which the content has been downloaded """
         if content in self.model.download_table:
             return self.model.download_table[content]
         else:
             return 0
 
-    def number_of_times_being_cached(self, content):
+    def cache_counts(self, content):
         """Return the number of times which the content has been cached """
         if content in self.model.cache_table:
             return self.model.cache_table[content]
@@ -424,10 +425,10 @@ class NetworkModel(object):
                           for node in cache_size}
 
         # Global Content-Download Information (Key=content, Value=number of downloads)
-        self.download_table = {}
+        self.download_table = collections.defaultdict(int)
 
         # Global Content-Caching Information (Key=content, Value=number of times being cached)
-        self.cache_table = {}
+        self.cache_table = collections.defaultdict(int)
 
         # This is for a local un-coordinated cache (currently used only by
         # Hashrouting with edge cache)
@@ -444,7 +445,6 @@ class NetworkModel(object):
         self.removed_sources = {}
         self.removed_caches = {}
         self.removed_local_caches = {}
-
 
 class NetworkController(object):
     """Network controller
@@ -602,11 +602,14 @@ class NetworkController(object):
         if node in self.model.cache:
             # Update the content-cache table
             if self.session['content'] not in self.model.cache[node].dump():
-                if self.session['content'] in self.model.cache_table:
-                    self.model.cache_table[self.session['content']] += 1
-                else:
-                    self.model.cache_table[self.session['content']] = 1
-            return self.model.cache[node].put(self.session['content'])
+                self.model.cache_table[self.session['content']] += 1
+                if self.session['log']:
+                    self.collector.content_cache(node)
+            evicted_content = self.model.cache[node].put(self.session['content'])
+            # if evicted_content is not None:
+            #     self.collector.cache_evict(node)
+            #     self.collector.content_cache(node)
+            return evicted_content
 
     def get_content(self, node):
         """Get a content from a server or a cache.
@@ -628,10 +631,7 @@ class NetworkController(object):
                 if self.session['log']:
                     self.collector.cache_hit(node)
                 # Update the content-download table
-                if self.session['content'] in self.model.download_table:
-                    self.model.download_table[self.session['content']] += 1
-                else:
-                    self.model.download_table[self.session['content']] = 1
+                self.model.download_table[self.session['content']] += 1
             else:
                 if self.session['log']:
                     self.collector.cache_miss(node)
@@ -641,10 +641,7 @@ class NetworkController(object):
             if self.collector is not None and self.session['log']:
                 self.collector.server_hit(node)
             # Update the content-download table
-            if self.session['content'] in self.model.download_table:
-                self.model.download_table[self.session['content']] += 1
-            else:
-                self.model.download_table[self.session['content']] = 1
+            self.model.download_table[self.session['content']] += 1
             return True
         else:
             return False

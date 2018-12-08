@@ -41,7 +41,7 @@ def uniform_cache_placement(topology, cache_budget, **kwargs):
     for v in icr_candidates:
         topology.node[v]['stack'][1]['cache_size'] = cache_size
 
-@register_cache_placement('UNIFORM_with_uCache')
+@register_cache_placement('UNIFORM_WITH_UCACHE')
 def uniform_cache_placement_with_uCache(topology, nCache_budget, uCache_budget,  **kwargs):
     """Places cache budget uniformly across cache nodes.
 
@@ -66,6 +66,8 @@ def uniform_cache_placement_with_uCache(topology, nCache_budget, uCache_budget, 
     uCache_size = iround(uCache_budget / len(uCache_candidates))
     for v in uCache_candidates:
         topology.node[v]['stack'][1]['cache_size'] = uCache_size
+
+    print 'icr_candidates:', len(icr_candidates), '| uCache_candidates:', len(uCache_candidates)
 
 @register_cache_placement('DEGREE')
 def degree_centrality_cache_placement(topology, cache_budget, **kwargs):

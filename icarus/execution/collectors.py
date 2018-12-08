@@ -20,8 +20,8 @@ from icarus.util import Tree, inheritdoc
 
 __all__ = [
     'DataCollector',
-    #'CachingEfficiencyCollector', (to be implemented)
-    'CacheEvictionCollector', # Last modiefied: 2018.12.06
+    'CachingEfficiencyCollector', # Last modiefied: 2018.12.08
+    'CacheEvictionCollector', # Last modiefied: 2018.12.07
     'OverheadDistributionCollector', # Last modified: 2018.12.06
     'CollectorProxy',
     'CacheHitRatioCollector',
@@ -78,6 +78,9 @@ class DataCollector(object):
         pass
 
     def cache_evict(self, node):
+        pass
+
+    def content_cache(self, node):
         pass
 
     def cache_miss(self, node):
@@ -157,6 +160,27 @@ class DataCollector(object):
         """
         pass
 
+@register_data_collector('CACHING_EFFICIENCY')
+class CachingEfficiencyCollector(DataCollector):
+    def __init__(self, view):
+        self.view = view
+        self.cache_hits = 0
+        self.content_cached = 0
+
+    @inheritdoc(DataCollector)
+    def cache_hit(self, node):
+        self.cache_hits += 1
+
+    @inheritdoc(DataCollector)
+    def content_cache(self, node):
+        self.content_cached += 1
+
+    @inheritdoc(DataCollector)
+    def results(self):
+        mean = self.cache_hits/self.content_cached
+        results = Tree({'MEAN': mean})
+        return results
+
 @register_data_collector('CACHE_EVICTION')
 class CacheEvictionCollector(DataCollector):
     def __init__(self, view):
@@ -170,9 +194,8 @@ class CacheEvictionCollector(DataCollector):
     @inheritdoc(DataCollector)
     def results(self):
         sample = self.cache_evictions.values()
-        mean = sum(sample)/float(len(sample)) \
-                if len(sample) > 0 else 0
-        results = Tree({'MEAN': mean})
+        mean = np.mean(sample)
+        results = Tree({'MEAN': np.mean(sample)})
         return results
 
 @register_data_collector('OVERHEAD_DISTRIBUTION')
@@ -189,7 +212,7 @@ class OverheadDistributionCollector(DataCollector):
     def results(self):
         sample = self.cache_hits.values()
         cv = np.std(sample)/np.mean(sample)
-        results = Tree({'COEFFICIENT OF VARIATION': cv})
+        results = Tree({'CV': cv})
         return results
 
 # Note: The implementation of CollectorProxy could be improved to avoid having
@@ -205,7 +228,7 @@ class CollectorProxy(DataCollector):
     dispatching events of interests to concrete collectors.
     """
 
-    EVENTS = ('start_session', 'end_session', 'cache_hit', 'cache_miss', 'server_hit',
+    EVENTS = ('start_session', 'end_session', 'cache_hit', 'cache_evict', 'content_cache', 'cache_miss', 'server_hit',
               'request_hop', 'content_hop', 'results')
 
     def __init__(self, view, collectors):
@@ -231,6 +254,16 @@ class CollectorProxy(DataCollector):
     def cache_hit(self, node):
         for c in self.collectors['cache_hit']:
             c.cache_hit(node)
+
+    @inheritdoc(DataCollector)
+    def cache_evict(self, node):
+        for c in self.collectors['cache_evict']:
+            c.cache_evict(node)
+
+    @inheritdoc(DataCollector)
+    def content_cache(self, node):
+        for c in self.collectors['content_cache']:
+            c.content_cache(node)
 
     @inheritdoc(DataCollector)
     def cache_miss(self, node):

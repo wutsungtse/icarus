@@ -1,203 +1,3 @@
-"""This module contains all configuration information used to run simulations.
-
-Overview
-========
-
-This reference configuration file is divided into two parts.
-The first part lists generic simulation parameters such as number of processes
-to use, logging configuration and so on.
-The second part builds an "experiment queue", i.e. a queue of configuration
-parameters each representing one single experiment.
-
-Each element of the queue must be an instance of the icarus.util.Tree class,
-which is an object modelling a tree of hierarchically organized configuration
-parameters. Alternatively nested dictionaries can be used instead of trees. In
-this case Icarus will convert them to trees at runtime. It is however suggested
-to use Tree objects because they provide methods that simplify the definition
-of experiments.
-
-Experiment definition syntax
-============================
-
-This figure below represents the parameter structure accepted by Icarus:
-
- |
- |--- topology
- |        |----- name
- |        |----- topology arg 1
- |        |----- topology arg 2
- |        |----- ..............
- |        |----- topology arg N
- |
- |--- workload
- |        |----- name
- |        |----- workload arg 1
- |        |----- workload arg 2
- |        |----- ..............
- |        |----- workload arg N
- |
- |--- cache_placement
- |        |----- name
- |        |----- cache_placement arg 1
- |        |----- cache_placement arg 2
- |        |----- ......................
- |        |----- cache_placement arg N
- |
- |--- content_placement
- |        |----- name
- |        |----- content_placement arg 1
- |        |----- content_placement arg 2
- |        |----- .......................
- |        |----- content_placement arg N
- |
- |--- strategy
- |        |----- name
- |        |----- strategy arg 1
- |        |----- strategy arg 2
- |        |----- ..............
- |        |----- strategy arg N
- |
- |--- cache_policy
- |        |----- name
- |        |----- cache_policy arg 1
- |        |----- cache_policy arg 2
- |        |----- ..................
- |        |----- cache_policy arg N
- |
-
-
-Here below are listed all components currently provided by Icarus and lists
-all parameters for each of them
-
-topology
---------
-
-Path topology
- * name: PATH
- * args:
-    * n: number of nodes
-
-Tree topology
- * name: TREE
- * args:
-    * h: height
-    * k: branching factor
-
-RocketFuel topologies
- * name: ROCKET_FUEL, ROCKET_FUEL_with_uCache
- * args:
-     * asn: ASN of topology selected (see resources/README.md for further info)
-     * source_ratio: ratio of nodes to which attach a content source
-     * ext_delay: delay of interdomain links
-
-Internet Topology Zoo topologies
- * name: GARR, GEANT, TISCALI, WIDE, GEANT_2, GARR_2, TISCALI_2
- * args: Nones
-
-
-workload
---------
-
-Stationary Zipf workload
- * name: STATIONARY
- * args:
-    * alpha : float, the Zipf alpha parameter
-    * n_contents: number of content objects
-    * n_warmup: number of warmup requests
-    * n_measured: number of measured requests
-    * rate: requests rate
-
-GlobeTraff workload
- * name: GLOBETRAFF
- * args:
-    * reqs_file: the path to a GlobeTraff request file
-    * contents_file: the path to a GlobeTraff content file
-
-Trace-driven workload
- * name: TRACE_DRIVEN
- * args:
-    * reqs_file: the path to the requests file
-    * contents_file: the path to the contents file
-    * n_contents: number of content objects
-    * n_warmup: number of warmup requests
-    * n_measured: number of measured requests
-
-
-content_placement
------------------
-Uniform (content uniformly distributed among servers)
- * name: UNIFORM
- * args: None
-
-
-cache_placement
----------------
- * name:
-    * UNIFORM -> cache space uniformly spread across caches
-    * UNIFORM_with_uCache -> cache space uniformly spread across caches
-    * CONSOLIDATED -> cache space consolidated among nodes with top betweenness centrality
-    * BETWEENNESS_CENTRALITY -> cache space assigned to all candidate nodes proportionally to their betweenness centrality
-    * DEGREE -> cache space assigned to all candidate nodes proportionally to their degree
- * args
-    * For all:
-       * network_cache: overall network cache (in number of entries) as fraction of content catalogue
-    * For CONSOLIDATED
-       * spread: The fraction of top centrality nodes on which caches are deployed (optional, default: 0.5)
-
-
-strategy
---------
- * name:
-    * LCE               ->  Leave Copy Everywhere
-    * LCE_UserAssisted  ->  Leave Copy Everywhere User-Assisted
-    * NO_CACHE          ->  No caching, shorest-path routing
-    * HR_SYMM           ->  Symmetric hash-routing
-    * HR_ASYMM          ->  Asymmetric hash-routing
-    * HR_MULTICAST      ->  Multicast hash-routing
-    * HR_HYBRID_AM      ->  Hybrid Asymm-Multicast hash-routing
-    * HR_HYBRID_SM      ->  Hybrid Symm-Multicast hash-routing
-    * CL4M              ->  Cache less for more
-    * PROB_CACHE        ->  ProbCache
-    * LCD               ->  Leave Copy Down
-    * RAND_CHOICE       ->  Random choice: cache in one random cache on path
-    * RAND_BERNOULLI    ->  Random Bernoulli: cache randomly in caches on path
- * args:
-    * For PROB_CACHE
-       * t_tw : float, optional, default=10. The ProbCache t_tw parameter
-    * For HR_HYBRID_AM
-       * max_stretch: float, optional, default=0.2.
-         The max detour stretch for selecting multicast
-
-
-cache_policy
-------------
- * name:
-    * LRU   -> Least Recently Used
-    * SLRU  -> Segmeted Least Recently Used
-    * LFU   -> Least Frequently Used
-    * NULL  -> No cache
-    * RAND  -> Random eviction
-    * FIFO  -> First In First Out
- * args:
-    * For SLRU:
-       * segments: int, optional, default=2. Number of segments
-
-
-desc
-----
-string describing the experiment (used to print on screen progress information)
-
-Further info
-============
-
-To get further information about the models implemented in the simulator you
-can inspect the source code which is well organized and documented:
- * Topology implementations are located in ./icarus/scenarios/topology.py
- * Cache placement implementations are located in
-   ./icarus/scenarios/cacheplacement.py
- * Caching and routing strategies located in ./icarus/models/strategy.py
- * Cache eviction policy implementations are located in ./icarus/models/cache.py
-"""
 from multiprocessing import cpu_count
 from collections import deque
 import copy
@@ -230,13 +30,11 @@ N_REPLICATIONS = 1
 # The implementation of data collectors are located in ./icaurs/execution/collectors.py
 # Remove collectors not needed
 DATA_COLLECTORS = [
-           # 'CACHE_HIT_RATIO',  # Measure cache hit ratio
-           # 'LATENCY',  # Measure request and response latency (based on static link delays)
+           #'CACHE_HIT_RATIO',  # Measure cache hit ratio
+           #'LATENCY',  # Measure request and response latency (based on static link delays)
            'OVERHEAD_DISTRIBUTION',
-           # 'CACHE_EVICTION',
-           # 'CACHING_EFFICIENCY'
-           #'LINK_LOAD',  # Measure link loads
-           #'PATH_STRETCH',  # Measure path stretch
+           #'CACHE_EVICTION',
+           #'CACHING_EFFICIENCY'
                    ]
 
 
@@ -266,7 +64,7 @@ ALPHA = [1.0]
 
 # Total size of network cache as a fraction of content population
 # Remove sizes not needed
-NETWORK_CACHE = [0, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+NETWORK_CACHE = [0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 
 # Total cache budget
 # cache_budget = [nCache_budget, uCache_budget]
@@ -308,14 +106,13 @@ default['workload'] = {'name':       'STATIONARY',
                        'n_measured': N_MEASURED_REQUESTS,
                        'rate':       REQ_RATE}
 
-default['cache_placement']['name'] = 'UNIFORM_with_uCache'
+default['cache_placement']['name'] = 'UNIFORM_WITH_UCACHE'
 
 default['content_placement']['name'] = 'UNIFORM'
 
 default['cache_policy']['name'] = CACHE_POLICY
 
-default['topology'] = { 'name': 'ROCKET_FUEL_with_uCache',
-                        'asn':  3257,  # Tiscali (Europe)
+default['topology'] = {'asn':  3257,  # Tiscali (Europe)
                       }
 
 # Create experiments multiplexing all desired parameters
