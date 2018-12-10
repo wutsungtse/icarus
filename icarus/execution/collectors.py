@@ -185,7 +185,7 @@ class CachingEfficiencyCollector(DataCollector):
 class CacheEvictionCollector(DataCollector):
     def __init__(self, view):
         self.view = view
-        self.cache_evictions = collections.defaultdict(int)
+        self.cache_evictions = collections.Counter()
 
     @inheritdoc(DataCollector)
     def cache_evict(self, node):
@@ -202,7 +202,7 @@ class CacheEvictionCollector(DataCollector):
 class OverheadDistributionCollector(DataCollector):
     def __init__(self, view):
         self.view = view
-        self.cache_hits = collections.defaultdict(int)
+        self.cache_hits = collections.Counter()
 
     @inheritdoc(DataCollector)
     def cache_hit(self, node):

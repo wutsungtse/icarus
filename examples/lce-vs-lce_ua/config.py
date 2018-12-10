@@ -30,11 +30,11 @@ N_REPLICATIONS = 1
 # The implementation of data collectors are located in ./icaurs/execution/collectors.py
 # Remove collectors not needed
 DATA_COLLECTORS = [
-           #'CACHE_HIT_RATIO',  # Measure cache hit ratio
-           #'LATENCY',  # Measure request and response latency (based on static link delays)
+           'CACHE_HIT_RATIO',  # Measure cache hit ratio
+           'LATENCY',  # Measure request and response latency (based on static link delays)
            'OVERHEAD_DISTRIBUTION',
-           #'CACHE_EVICTION',
-           #'CACHING_EFFICIENCY'
+           'CACHE_EVICTION',
+           'CACHING_EFFICIENCY'
                    ]
 
 
@@ -69,8 +69,8 @@ NETWORK_CACHE = [0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0
 # Total cache budget
 # cache_budget = [nCache_budget, uCache_budget]
 
-CACHE_BUDGET_FACTORS = [ #[1.0, 0], # nCache only
-                         #[1.0, 1.0], # Both nCache and uCache
+CACHE_BUDGET_FACTORS = [ # [1.0, 0], # nCache only
+                         # [1.0, 1.0], # Both nCache and uCache
                          [0, 1.0], # uCache only
                 ]
 
@@ -78,7 +78,7 @@ CACHE_BUDGET_FACTORS = [ #[1.0, 0], # nCache only
 # Topology implementations are located in ./icarus/scenarios/topology.py
 # Remove topologies not needed
 TOPOLOGIES = [
-	#'TREE_WITH_UCACHE'
+	# 'TREE_WITH_UCACHE'
   'ROCKET_FUEL_WITH_UCACHE',
 ]
 
@@ -88,10 +88,10 @@ TOPOLOGIES = [
 STRATEGIES = [
     # 'LCE',                 # Leave Copy Everywhere
     # 'LCE_USER_ASSISTED',   # Leave Copy Everywhere User-Assisted
-    # 'C_RANDOM',
+    'C_RANDOM',
     'C_RANDOM_P2P',
-    'C_LFR_P2P',           # Centralised Largest Future Request First P2P
-    'C_LCF_P2P',           # Centralised Least Cached First P2P
+    # 'C_LFR_P2P',           # Centralised Largest Future Request First P2P
+    # 'C_LCF_P2P',           # Centralised Least Cached First P2P
 ]
 
 # Instantiate experiment queue
@@ -125,7 +125,7 @@ for alpha in ALPHA:
                 experiment['workload']['alpha'] = alpha
                 experiment['strategy']['name'] = strategy
                 experiment['topology']['name'] = topology
-                experiment['cache_placement']['nCache_budget'] = cache_budget_factor[0] * N_CONTENTS * 0.01
+                experiment['cache_placement']['nCache_budget'] = cache_budget_factor[0] * N_CONTENTS * 0.1
                 experiment['cache_placement']['uCache_budget'] = cache_budget_factor[1] * N_CONTENTS * network_cache
                 experiment['cache_placement']['network_cache'] = network_cache
                 experiment['desc'] = "strategy: %s, network cache: %s" \

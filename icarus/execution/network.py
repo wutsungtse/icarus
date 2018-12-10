@@ -425,10 +425,10 @@ class NetworkModel(object):
                           for node in cache_size}
 
         # Global Content-Download Information (Key=content, Value=number of downloads)
-        self.download_table = collections.defaultdict(int)
+        self.download_table = collections.Counter()
 
         # Global Content-Caching Information (Key=content, Value=number of times being cached)
-        self.cache_table = collections.defaultdict(int)
+        self.cache_table = collections.Counter()
 
         # This is for a local un-coordinated cache (currently used only by
         # Hashrouting with edge cache)
@@ -600,15 +600,35 @@ class NetworkController(object):
             The evicted object or *None* if no contents were evicted.
         """
         if node in self.model.cache:
-            # Update the content-cache table
-            if self.session['content'] not in self.model.cache[node].dump():
-                self.model.cache_table[self.session['content']] += 1
-                if self.session['log']:
-                    self.collector.content_cache(node)
-            evicted_content = self.model.cache[node].put(self.session['content'])
-            # if evicted_content is not None:
-            #     self.collector.cache_evict(node)
-            #     self.collector.content_cache(node)
+            cache_is_full = self.model.cache[node].__len__() == self.model.cache[node]._maxlen
+            evicted_content = None
+            # Check if the cache is full.
+            if cache_is_full:
+                if self.session['content'] not in self.model.cache[node].dump():
+                    evicted_content = self.model.cache[node].put(self.session['content'])
+                    # If there is content being evicted, that means the session content must have been cached.
+                    if evicted_content is not None:
+                        # Update cache counts for the session content.
+                        self.model.cache_table[self.session['content']] += 1
+                        if self.session['log']:
+                            self.collector.content_cache(node)
+                            self.collector.cache_evict(node)
+                else:
+                    # Content already cached, update the rank of the session content.
+                    self.model.cache[node].put(self.session['content'])
+                                   
+            # Cache is not full. (no eviction occurs)
+            else:
+                # Cache the session content if not already cached.
+                if self.session['content'] not in self.model.cache[node].dump():
+                    self.model.cache[node].put(self.session['content'])
+                    # Update cache counts for the session content.
+                    self.model.cache_table[self.session['content']] += 1
+                    if self.session['log']:
+                        self.collector.content_cache(node)
+                else:
+                    # Content already cached, update the rank of the session content.
+                    self.model.cache[node].put(self.session['content'])
             return evicted_content
 
     def get_content(self, node):

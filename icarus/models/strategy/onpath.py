@@ -359,35 +359,34 @@ class LeaveCopyEverywhere_UserAssisted(Strategy):
 
     @inheritdoc(Strategy)
     def process_event(self, time, receiver, content, log):
-        # get all required data
-        source = self.view.content_source(content)
-        path = self.view.shortest_path(receiver, source)
+        # Start session.
         self.controller.start_session(time, receiver, content, log)
-
         # Check if the receiver has already cached the content, if true, end the session.
         if self.view.has_cache(receiver):
             if self.controller.get_content(receiver):
                 self.controller.end_session()
                 return None
-                
-        # Receiver does not cache the content, route requests to original source and queries caches on the path
+        # Receiver does not cache the content, get all required data.
+        source = self.view.content_source(content)
+        path = self.view.shortest_path(receiver, source)
+        # Route request to original source and queries caches on the path.
         for u, v in path_links(path):
             self.controller.forward_request_hop(u, v)
             if self.view.has_cache(v):
                 if self.controller.get_content(v):
                     serving_node = v
                     break
-            # No cache hits, get content from source
+            # No cache hits, get content from source.
             self.controller.get_content(v)
             serving_node = v
-        # Return content
+        # Route content to receiver.
         path = list(reversed(self.view.shortest_path(receiver, serving_node)))
-
         for u, v in path_links(path):
             self.controller.forward_content_hop(u, v)
             if self.view.has_cache(v):
                 # Insert content.
                 self.controller.put_content(v)
+        # End session.
         self.controller.end_session()
 
 @register_strategy('LCD')
