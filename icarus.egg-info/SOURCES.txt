@@ -1,9 +1,9 @@
 CONTRIBUTING.md
 LICENSE.txt
 README.md
-examples/2018.10.30/config.py
-examples/2018.10.30/plotresults.py
-examples/2018.10.30/run.sh
+setup.py
+examples/lce-vs-lce_ua/config.py
+examples/lce-vs-lce_ua/run.sh
 examples/lce-vs-probcache/config.py
 examples/lce-vs-probcache/run.sh
 examples/offpath-vs-onpath-caching/config.py
@@ -50,12 +50,14 @@ icarus/tools/__init__.py
 icarus/tools/cacheperf.py
 icarus/tools/stats.py
 icarus/tools/traces.py
+resources/topologies/.DS_Store
 resources/topologies/3257.r0.cch
 resources/topologies/7018.r0.cch
 resources/topologies/DeutscheTelekom.graphml
 resources/topologies/Garr201201.graphml
 resources/topologies/Geant2012.graphml
 resources/topologies/WideJpn.graphml
+resources/topologies/rocketfuel-latency/.DS_Store
 resources/topologies/rocketfuel-latency/1221/latencies.intra
 resources/topologies/rocketfuel-latency/1221/weights.intra
 resources/topologies/rocketfuel-latency/1239/latencies.intra
