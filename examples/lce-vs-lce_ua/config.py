@@ -64,7 +64,7 @@ ALPHA = [1.0]
 
 # Total size of network cache as a fraction of content population
 # Remove sizes not needed
-NETWORK_CACHE = [0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+NETWORK_CACHE = [0.001, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 
 # Total cache budget
 # cache_budget = [nCache_budget, uCache_budget]
@@ -88,10 +88,10 @@ TOPOLOGIES = [
 STRATEGIES = [
     # 'LCE',                 # Leave Copy Everywhere
     # 'LCE_USER_ASSISTED',   # Leave Copy Everywhere User-Assisted
-    'C_RANDOM',
+    # 'C_RANDOM',
+    'C_LFR_P2P',           # Centralised Largest Future Request First P2P
+    'C_LCF_P2P',           # Centralised Least Cached First P2P
     'C_RANDOM_P2P',
-    # 'C_LFR_P2P',           # Centralised Largest Future Request First P2P
-    # 'C_LCF_P2P',           # Centralised Least Cached First P2P
 ]
 
 # Instantiate experiment queue

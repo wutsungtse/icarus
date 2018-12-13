@@ -15,6 +15,7 @@ of all relevant events.
 import logging
 import random
 import collections
+import copy
 
 import networkx as nx
 import fnss
@@ -91,15 +92,15 @@ class NetworkView(object):
 
     def download_counts(self, content):
         """Return the number of times which the content has been downloaded """
-        if content in self.model.download_table:
-            return self.model.download_table[content]
+        if content in self.model.user_download_table:
+            return self.model.user_download_table[content]
         else:
             return 0
 
     def cache_counts(self, content):
         """Return the number of times which the content has been cached """
-        if content in self.model.cache_table:
-            return self.model.cache_table[content]
+        if content in self.model.user_cache_table:
+            return self.model.user_cache_table[content]
         else:
             return 0
 
@@ -424,11 +425,18 @@ class NetworkModel(object):
         self.cache = {node: CACHE_POLICY[policy_name](cache_size[node], **policy_args)
                           for node in cache_size}
 
-        # Global Content-Download Information (Key=content, Value=number of downloads)
-        self.download_table = collections.Counter()
+        # Iime interval for receiving caching guidance from central server.
+        self.time_interval = 120
+        # Set the initial expiry time equal to time interval.
+        self.expiry_time = self.time_interval
 
-        # Global Content-Caching Information (Key=content, Value=number of times being cached)
-        self.cache_table = collections.Counter()
+        # Content-Download Information (Key=content, Value=number of downloads)
+        self.central_download_table = collections.Counter()
+        self.user_download_table = collections.Counter()
+
+        # Content-Caching Information (Key=content, Value=number of times being cached)
+        self.central_cache_table = collections.Counter()
+        self.user_cache_table = collections.Counter()
 
         # This is for a local un-coordinated cache (currently used only by
         # Hashrouting with edge cache)
@@ -581,6 +589,26 @@ class NetworkController(object):
         if self.collector is not None and self.session['log']:
             self.collector.content_hop(u, v, main_path)
 
+    def update_user_cache_table(self, time):
+        if time >= self.model.expiry_time:
+            # Update the user cache table.
+            self.model.user_cache_table = copy.deepcopy(self.model.central_cache_table)
+            # Reset the central cache table.
+            self.model.central_cache_table.clear()
+            # Calculate the next expiry time.
+            self.model.expiry_time += self.model.time_interval
+            # print 'Current Time: ', time, '| Next Expiry Time: ', self.model.expiry_time
+
+    def update_user_download_table(self, time):
+        if time >= self.model.expiry_time:
+            # Update the user download table.
+            self.model.user_download_table = copy.deepcopy(self.model.central_download_table)
+            # Re-set the central download table.
+            self.model.central_download_table.clear()
+            # Calculate the next expiry time.
+            self.model.expiry_time += self.model.time_interval
+            # print 'Current Time: ', time, '| Next Expiry Time: ', self.model.expiry_time
+
     def put_content(self, node):
         """Store content in the specified node.
 
@@ -605,11 +633,12 @@ class NetworkController(object):
             # Check if the cache is full.
             if cache_is_full:
                 if self.session['content'] not in self.model.cache[node].dump():
+                    # Try to cache the session content.
                     evicted_content = self.model.cache[node].put(self.session['content'])
                     # If there is content being evicted, that means the session content must have been cached.
                     if evicted_content is not None:
                         # Update cache counts for the session content.
-                        self.model.cache_table[self.session['content']] += 1
+                        self.model.central_cache_table[self.session['content']] += 1
                         if self.session['log']:
                             self.collector.content_cache(node)
                             self.collector.cache_evict(node)
@@ -623,7 +652,7 @@ class NetworkController(object):
                 if self.session['content'] not in self.model.cache[node].dump():
                     self.model.cache[node].put(self.session['content'])
                     # Update cache counts for the session content.
-                    self.model.cache_table[self.session['content']] += 1
+                    self.model.central_cache_table[self.session['content']] += 1
                     if self.session['log']:
                         self.collector.content_cache(node)
                 else:
@@ -650,8 +679,8 @@ class NetworkController(object):
             if cache_hit:
                 if self.session['log']:
                     self.collector.cache_hit(node)
-                # Update the content-download table
-                self.model.download_table[self.session['content']] += 1
+                # Update the central content-download table
+                self.model.central_download_table[self.session['content']] += 1
             else:
                 if self.session['log']:
                     self.collector.cache_miss(node)
@@ -661,7 +690,7 @@ class NetworkController(object):
             if self.collector is not None and self.session['log']:
                 self.collector.server_hit(node)
             # Update the content-download table
-            self.model.download_table[self.session['content']] += 1
+            self.model.central_download_table[self.session['content']] += 1
             return True
         else:
             return False

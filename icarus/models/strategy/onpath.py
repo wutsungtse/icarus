@@ -34,6 +34,8 @@ class Centralised_LeastCachedFirst_P2P(Strategy):
 
     @inheritdoc(Strategy)
     def process_event(self, time, receiver, content, log):
+        # Update the user cache-table (if time expires)
+        self.controller.update_user_cache_table(time)
         # Start session.
         self.controller.start_session(time, receiver, content, log)
         # Check if the receiver has already cached the content, if true, end the session.
@@ -89,6 +91,8 @@ class Centralised_LargestFutureRequestFirst_P2P(Strategy):
 
     @inheritdoc(Strategy)
     def process_event(self, time, receiver, content, log):
+        # Update the user download-table (if time expires)
+        self.controller.update_user_download_table(time)
         # Start session.
         self.controller.start_session(time, receiver, content, log)
         # Check if the receiver has already cached the content, if true, end the session.

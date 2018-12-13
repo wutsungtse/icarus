@@ -21,4 +21,4 @@ export PYTHONPATH=${ICARUS_DIR}:$PYTHONPATH
 # Run experiments
 echo "Run experiments"
 icarus run --results ${RESULTS_FILE} ${CONFIG_FILE}
-icarus results print results.pickle > cRandom(P2P_vs_noP2P).txt
+icarus results print results.pickle > results.txt
