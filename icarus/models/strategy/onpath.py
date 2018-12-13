@@ -65,12 +65,12 @@ class Centralised_LeastCachedFirst_P2P(Strategy):
         # If receiver's cache is full, evict the most cached content.
         if self.view.is_cache_full(receiver):
             content_to_be_evicted = content
-            maximum = self.view.cache_counts(content_to_be_evicted)
+            minimum = self.view.cache_counts(content_to_be_evicted)
             # Find the content being most cached.
             cache_dump = self.view.cache_dump(receiver)
             for cached_content in cache_dump:
-                if self.view.cache_counts(cached_content) >= maximum:
-                    maximum = self.view.cache_counts(cached_content)
+                if self.view.cache_counts(cached_content) <= minimum:
+                    minimum = self.view.cache_counts(cached_content)
                     content_to_be_evicted = cached_content
             # If the content (being most cached) is not the session content, evict the cached content (being most cached),
             # else if the content (being most cached) is the session content, simply do nothing and end the session.
@@ -122,12 +122,12 @@ class Centralised_LargestFutureRequestFirst_P2P(Strategy):
         # If receiver's cache is full, evict the most downloaded content.
         if self.view.is_cache_full(receiver):
             content_to_be_evicted = content
-            maximum = self.view.download_counts(content_to_be_evicted)
+            minimum = self.view.download_counts(content_to_be_evicted)
             # Find the content with most downloads.
             cache_dump = self.view.cache_dump(receiver)
             for cached_content in cache_dump:
-                if self.view.download_counts(cached_content) >= maximum:
-                    maximum = self.view.download_counts(cached_content)
+                if self.view.download_counts(cached_content) <= minimum:
+                    minimum = self.view.download_counts(cached_content)
                     content_to_be_evicted = cached_content
             # If the content (with most downloads) is not the session content, evict the cached content (with most downloads).
             # Else if the content (with most downloads) is the session content, simply do nothing and end the session.
