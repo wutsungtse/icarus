@@ -44,14 +44,17 @@ DATA_COLLECTORS = [
 # Default experiment values, i.e. values shared by all experiments
 
 # Number of content objects
-N_CONTENTS = 3 * 10 ** 5
+N_CONTENTS = 1 * 10 ** 2
+
+# Numer of segments per content object
+N_SEGMENTS = 5000
 
 # Number of content requests generated to pre-populate the caches
 # These requests are not logged
-N_WARMUP_REQUESTS = 3 * 10 ** 5
+N_WARMUP_REQUESTS = 1 * 10 ** 2
 
 # Number of content requests that are measured after warmup
-N_MEASURED_REQUESTS = 9 * 10 ** 5
+N_MEASURED_REQUESTS = 3 * 10 ** 2
 
 # Number of requests per second (over the whole network)
 REQ_RATE = 1.0
@@ -89,9 +92,9 @@ STRATEGIES = [
     # 'LCE',                 # Leave Copy Everywhere
     # 'LCE_USER_ASSISTED',   # Leave Copy Everywhere User-Assisted
     # 'C_RANDOM',
-    'C_LFR_P2P',           # Centralised Largest Future Request First P2P
-    'C_LCF_P2P',           # Centralised Least Cached First P2P
-    'C_RANDOM_P2P',
+    # 'C_LFR_UM',           # Centralised Largest Future Request First P2P
+    # 'C_LCF_UM',           # Centralised Least Cached First P2P
+    'C_RANDOM_UM',
 ]
 
 # Instantiate experiment queue
@@ -102,6 +105,7 @@ EXPERIMENT_QUEUE = deque()
 default = Tree()
 default['workload'] = {'name':       'STATIONARY',
                        'n_contents': N_CONTENTS,
+                       'n_segments': N_SEGMENTS, 
                        'n_warmup':   N_WARMUP_REQUESTS,
                        'n_measured': N_MEASURED_REQUESTS,
                        'rate':       REQ_RATE}
@@ -125,8 +129,8 @@ for alpha in ALPHA:
                 experiment['workload']['alpha'] = alpha
                 experiment['strategy']['name'] = strategy
                 experiment['topology']['name'] = topology
-                experiment['cache_placement']['nCache_budget'] = cache_budget_factor[0] * N_CONTENTS * 0.1
-                experiment['cache_placement']['uCache_budget'] = cache_budget_factor[1] * N_CONTENTS * network_cache
+                experiment['cache_placement']['nCache_budget'] = cache_budget_factor[0] * N_CONTENTS * N_SEGMENTS * 0.1
+                experiment['cache_placement']['uCache_budget'] = cache_budget_factor[1] * N_CONTENTS * N_SEGMENTS * network_cache
                 experiment['cache_placement']['network_cache'] = network_cache
                 experiment['desc'] = "strategy: %s, network cache: %s" \
                                      % (strategy, str(network_cache))

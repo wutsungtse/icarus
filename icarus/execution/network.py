@@ -426,7 +426,7 @@ class NetworkModel(object):
                           for node in cache_size}
 
         # Iime interval for receiving caching guidance from central server.
-        self.time_interval = 10
+        self.time_interval = 60
         # Set the initial expiry time equal to time interval.
         self.expiry_time = self.time_interval
 

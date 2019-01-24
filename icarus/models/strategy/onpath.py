@@ -10,10 +10,10 @@ from icarus.util import inheritdoc, path_links
 from .base import Strategy
 
 __all__ = [
-       'Centralised_LeastCachedFirst_P2P', # Last Modified: 2018.12.05
-       'Centralised_LargestFutureRequestFirst_P2P', # Last Modified: 2018.12.05
+       'Centralised_LeastCachedFirst_UM', # Last Modified: 2018.12.13
+       'Centralised_LargestFutureRequestFirst_UM', # Last Modified: 2018.12.13
        'Centralised_Random', # Last Modified: 2018.12.05
-       'Centralised_Random_P2P', # Last Modified: 2018.12.05
+       'Centralised_Random_UM', # Last Modified: 2018.12.05
        'Partition',
        'Edge',
        'LeaveCopyEverywhere',
@@ -25,162 +25,151 @@ __all__ = [
        'RandomChoice',
            ]
 
-@register_strategy('C_LCF_P2P')
-class Centralised_LeastCachedFirst_P2P(Strategy):
+@register_strategy('C_LCF_UM')
+class Centralised_LeastCachedFirst_UM(Strategy):
 
     @inheritdoc(Strategy)
     def __init__(self, view, controller, **kwargs):
-        super(Centralised_LeastCachedFirst_P2P, self).__init__(view, controller)
+        super(Centralised_LeastCachedFirst_UM, self).__init__(view, controller)
 
     @inheritdoc(Strategy)
-    def process_event(self, time, receiver, content, log):
-        # Update the user cache-table (if time expires)
-        self.controller.update_user_cache_table(time)
-        # Start session.
-        self.controller.start_session(time, receiver, content, log)
-        # Check if the receiver has already cached the content, if true, end the session.
-        if self.view.has_cache(receiver):
-            if self.controller.get_content(receiver):
-                self.controller.end_session()
-                return None
-        # Receiver does not cache the content, get all required data.
-        content_locations = list(self.view.content_locations(content))
-        destination = content_locations[0]
-        path = self.view.shortest_path(receiver, destination)
-        # Find the nearest content location and the corresponding shortest path.
-        for content_location in content_locations:
-            current_path = self.view.shortest_path(receiver, content_location)
-            if len(current_path) < len(path):
-                path = current_path
-                destination = content_location
-        # Route request to destination.
-        for u, v in path_links(path):
-            self.controller.forward_request_hop(u, v)
-        # Get content from destination.
-        self.controller.get_content(destination)
-        # Route content to receiver.
-        path = list(reversed(path))
-        for u, v in path_links(path):
-            self.controller.forward_content_hop(u, v)
-        # If receiver's cache is full, evict the most cached content.
-        if self.view.is_cache_full(receiver):
-            content_to_be_evicted = content
-            minimum = self.view.cache_counts(content_to_be_evicted)
-            # Find the content being most cached.
-            cache_dump = self.view.cache_dump(receiver)
-            for cached_content in cache_dump:
-                if self.view.cache_counts(cached_content) <= minimum:
-                    minimum = self.view.cache_counts(cached_content)
-                    content_to_be_evicted = cached_content
-            # If the content (being most cached) is not the session content, evict the cached content (being most cached),
-            # else if the content (being most cached) is the session content, simply do nothing and end the session.
-            if content_to_be_evicted != content:
-                self.controller.remove_content_by_choice(receiver, content_to_be_evicted)
-                self.controller.put_content(receiver)
-        else:
+    def process_event(self, time, receiver, content, log, n_segments=5000):
+        first_segment = content * n_segments
+        last_segment = first_segment + n_segments - 1
+        for segment in range(first_segment, last_segment):
+            # Update the user cache-table (if time expires)
+            self.controller.update_user_cache_table(time)
+            # Start session.
+            self.controller.start_session(time, receiver, content, log)
+            # Check if the receiver has already cached the content, if true, end the session.
+            if self.view.has_cache(receiver):
+                if self.controller.get_content(receiver):
+                    self.controller.end_session()
+                    return None
+            # Receiver does not cache the content, get all required data.
+            content_locations = list(self.view.content_locations(content))
+            destination = content_locations[0]
+            path = self.view.shortest_path(receiver, destination)
+            # Find the nearest content location and the corresponding shortest path.
+            for content_location in content_locations:
+                current_path = self.view.shortest_path(receiver, content_location)
+                if len(current_path) < len(path):
+                    path = current_path
+                    destination = content_location
+            # Route request to destination.
+            for u, v in path_links(path):
+                self.controller.forward_request_hop(u, v)
+            # Get content from destination.
+            self.controller.get_content(destination)
+            # Route content to receiver.
+            path = list(reversed(path))
+            for u, v in path_links(path):
+                self.controller.forward_content_hop(u, v)
+            # End session.
+            self.controller.end_session()
+
+        packet = range(first_segment, last_segment)
+
+        for segment in packet:
+            self.controller.start_session(time, receiver, segment, log)
             self.controller.put_content(receiver)
-        # End session.
-        self.controller.end_session()
+            self.controller.end_session()
 
-@register_strategy('C_LFR_P2P')
-class Centralised_LargestFutureRequestFirst_P2P(Strategy):
+@register_strategy('C_LFR_UM')
+class Centralised_LargestFutureRequestFirst_UM(Strategy):
 
     @inheritdoc(Strategy)
     def __init__(self, view, controller, **kwargs):
-        super(Centralised_LargestFutureRequestFirst_P2P, self).__init__(view, controller)
+        super(Centralised_LargestFutureRequestFirst_UM, self).__init__(view, controller)
 
     @inheritdoc(Strategy)
-    def process_event(self, time, receiver, content, log):
-        # Update the user download-table (if time expires)
-        self.controller.update_user_download_table(time)
-        # Start session.
-        self.controller.start_session(time, receiver, content, log)
-        # Check if the receiver has already cached the content, if true, end the session.
-        if self.view.has_cache(receiver):
-            if self.controller.get_content(receiver):
-                self.controller.end_session()
-                return None
-        # Receiver does not cache the content, get all required data.
-        content_locations = list(self.view.content_locations(content))
-        destination = content_locations[0]
-        path = self.view.shortest_path(receiver, destination)
-        # Find the nearest content location and the corresponding shortest path.
-        for content_location in content_locations:
-            current_path = self.view.shortest_path(receiver, content_location)
-            if len(current_path) < len(path):
-                path = current_path
-                destination = content_location
-        # Route request to destination.
-        for u, v in path_links(path):
-            self.controller.forward_request_hop(u, v)
-        # Get content from destination.
-        self.controller.get_content(destination)
-        # Route content to receiver.
-        path = list(reversed(path))
-        for u, v in path_links(path):
-            self.controller.forward_content_hop(u, v)
-        # If receiver's cache is full, evict the most downloaded content.
-        if self.view.is_cache_full(receiver):
-            content_to_be_evicted = content
-            minimum = self.view.download_counts(content_to_be_evicted)
-            # Find the content with most downloads.
-            cache_dump = self.view.cache_dump(receiver)
-            for cached_content in cache_dump:
-                if self.view.download_counts(cached_content) <= minimum:
-                    minimum = self.view.download_counts(cached_content)
-                    content_to_be_evicted = cached_content
-            # If the content (with most downloads) is not the session content, evict the cached content (with most downloads).
-            # Else if the content (with most downloads) is the session content, simply do nothing and end the session.
-            if content_to_be_evicted != content:
-                self.controller.remove_content_by_choice(receiver, content_to_be_evicted)
-                self.controller.put_content(receiver)
-        else:
+    def process_event(self, time, receiver, content, log, n_segments=5000):
+        first_segment = content * n_segments
+        last_segment = first_segment + n_segments - 1
+        for segment in range(first_segment, last_segment):
+            # Update the user download-table (if time expires).
+            self.controller.update_user_download_table(time)
+            # Start session.
+            self.controller.start_session(time, receiver, segment, log)
+            # Check if the receiver has already cached the content, if true, end the session.
+            if self.view.has_cache(receiver):
+                if self.controller.get_content(receiver):
+                    self.controller.end_session()
+                    return None
+            # Receiver does not cache the content, get all required data.
+            content_locations = list(self.view.content_locations(content))
+            destination = content_locations[0]
+            path = self.view.shortest_path(receiver, destination)
+            # Find the nearest content location and the corresponding shortest path.
+            for content_location in content_locations:
+                current_path = self.view.shortest_path(receiver, content_location)
+                if len(current_path) < len(path):
+                    path = current_path
+                    destination = content_location
+            # Route request to destination.
+            for u, v in path_links(path):
+                self.controller.forward_request_hop(u, v)
+            # Get content from destination.
+            self.controller.get_content(destination)
+            # Route content to receiver.
+            path = list(reversed(path))
+            for u, v in path_links(path):
+                self.controller.forward_content_hop(u, v)
+            # End session.
+            self.controller.end_session()
+
+        packet = range(first_segment, last_segment)
+
+        for segment in packet:
+            self.controller.start_session(time, receiver, segment, log)
             self.controller.put_content(receiver)
-        # End session.
-        self.controller.end_session()
+            self.controller.end_session()
 
-@register_strategy('C_RANDOM_P2P')
-class Centralised_Random_P2P(Strategy):
+@register_strategy('C_RANDOM_UM')
+class Centralised_Random_UM(Strategy):
 
     @inheritdoc(Strategy)
     def __init__(self, view, controller, **kwargs):
-        super(Centralised_Random_P2P, self).__init__(view, controller)
+        super(Centralised_Random_UM, self).__init__(view, controller)
 
     @inheritdoc(Strategy)
-    def process_event(self, time, receiver, content, log):
-        # Start session.
-        self.controller.start_session(time, receiver, content, log)
-        # Check if the receiver has already cached the content, if true, end the session.
-        if self.view.has_cache(receiver):
-            if self.controller.get_content(receiver):
-                self.controller.end_session()
-                return None
-        # Receiver does not cache the content, get all required data.
-        content_locations = list(self.view.content_locations(content))
-        destination = content_locations[0]
-        path = self.view.shortest_path(receiver, destination)
-        # Find the nearest content location and the corresponding shortest path.
-        for content_location in content_locations:
-            current_path = self.view.shortest_path(receiver, content_location)
-            if len(current_path) < len(path):
-                path = current_path
-                destination = content_location
-        # Route request to destination.
-        for u, v in path_links(path):
-            self.controller.forward_request_hop(u, v)
-        # Get content from destination.
-        self.controller.get_content(destination)
-        # Route content to receiver.
-        path = list(reversed(path))
-        for u, v in path_links(path):
-            self.controller.forward_content_hop(u, v)
-        # If receiver's cache is full, evict a content by random.
-        if self.view.is_cache_full(receiver):
-            self.controller.remove_content_by_random(receiver)
-        # Insert content.
-        self.controller.put_content(receiver)
-        # End session
-        self.controller.end_session()
+    def process_event(self, time, receiver, content, log, n_segments=5000):
+        first_segment = content * n_segments
+        last_segment = first_segment + n_segments - 1
+        packet = range(first_segment, last_segment)
+        for segment in packet:
+            # Start session.
+            self.controller.start_session(time, receiver, segment, log)
+            # Check if the receiver has already cached the content, if true, end the session.
+            if self.view.has_cache(receiver):
+                if self.controller.get_content(receiver):
+                    self.controller.end_session()
+                    return None
+            # Receiver does not cache the content, get all required data.
+            content_locations = list(self.view.content_locations(segment))
+            destination = content_locations[0]
+            path = self.view.shortest_path(receiver, destination)
+            # Find the nearest content location and the corresponding shortest path.
+            for content_location in content_locations:
+                current_path = self.view.shortest_path(receiver, content_location)
+                if len(current_path) < len(path):
+                    path = current_path
+                    destination = content_location
+            # Route request to destination.
+            for u, v in path_links(path):
+                self.controller.forward_request_hop(u, v)
+            # Get content from destination.
+            self.controller.get_content(destination)
+            # Route content to receiver.
+            path = list(reversed(path))
+            for u, v in path_links(path):
+                self.controller.forward_content_hop(u, v)
+            self.controller.end_session()
+        random.shuffle(packet)
+        for segment in packet:
+            self.controller.start_session(time, receiver, segment, log)
+            self.controller.put_content(receiver)
+            self.controller.end_session()
 
 @register_strategy('C_RANDOM')
 class Centralised_Random(Strategy):
