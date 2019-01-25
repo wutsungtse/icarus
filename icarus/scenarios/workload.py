@@ -92,7 +92,8 @@ class StationaryWorkload(object):
                      if topology.node[v]['stack'][0] == 'receiver']
         self.zipf = TruncatedZipfDist(alpha, n_contents)
         self.n_contents = n_contents
-        self.contents = range(1, n_contents + 1)
+        self.n_segments = n_segments
+        self.contents = range(1, n_contents*n_segments+1) # A list of all segments.
         self.alpha = alpha
         self.rate = rate
         self.n_warmup = n_warmup
@@ -115,7 +116,8 @@ class StationaryWorkload(object):
                 receiver = self.receivers[self.receiver_dist.rv() - 1]
             content = int(self.zipf.rv())
             log = (req_counter >= self.n_warmup)
-            event = {'receiver': receiver, 'content': content, 'log': log}
+            # content * n_segments = last segment of the content (because content index start from 1)
+            event = {'receiver': receiver, 'content': content * self.n_segments, 'n_segments': self.n_segments, 'log': log}
             yield (t_event, event)
             req_counter += 1
         raise StopIteration()

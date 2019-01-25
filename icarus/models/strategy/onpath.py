@@ -133,11 +133,11 @@ class Centralised_Random_UM(Strategy):
         super(Centralised_Random_UM, self).__init__(view, controller)
 
     @inheritdoc(Strategy)
-    def process_event(self, time, receiver, content, log, n_segments=5000):
-        first_segment = content * n_segments
-        last_segment = first_segment + n_segments - 1
-        packet = range(first_segment, last_segment)
-        for segment in packet:
+    def process_event(self, time, receiver, content, n_segments, log):
+        last_segment = content
+        first_segment = last_segment - n_segments + 1
+        segments = range(first_segment, last_segment + 1)
+        for segment in segments:
             # Start session.
             self.controller.start_session(time, receiver, segment, log)
             # Check if the receiver has already cached the content, if true, end the session.
@@ -165,8 +165,8 @@ class Centralised_Random_UM(Strategy):
             for u, v in path_links(path):
                 self.controller.forward_content_hop(u, v)
             self.controller.end_session()
-        random.shuffle(packet)
-        for segment in packet:
+        random.shuffle(segments)
+        for segment in segments:
             self.controller.start_session(time, receiver, segment, log)
             self.controller.put_content(receiver)
             self.controller.end_session()

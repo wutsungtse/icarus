@@ -112,7 +112,9 @@ default['workload'] = {'name':       'STATIONARY',
 
 default['cache_placement']['name'] = 'UNIFORM_WITH_UCACHE'
 
-default['content_placement']['name'] = 'UNIFORM'
+default['content_placement'] = {'name':       'UNIFORM',
+                                'n_contents': N_CONTENTS,
+                                'n_segments': N_SEGMENTS}
 
 default['cache_policy']['name'] = CACHE_POLICY
 

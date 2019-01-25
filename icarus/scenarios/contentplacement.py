@@ -30,7 +30,7 @@ def get_sources(topology):
     return [v for v in topology if topology.node[v]['stack'][0] == 'source']
 
 @register_content_placement('UNIFORM')
-def uniform_content_placement(topology, contents, seed=None):
+def uniform_content_placement(topology, contents, n_contents, n_segments, seed=None):
     """Places content objects to source nodes randomly following a uniform
     distribution.
 
@@ -39,7 +39,7 @@ def uniform_content_placement(topology, contents, seed=None):
     topology : Topology
         The topology object
     contents : iterable
-        Iterable of content objects
+        Iterable of 'segments' objects
     source_nodes : list
         List of nodes of the topology which are content sources
 
@@ -56,8 +56,14 @@ def uniform_content_placement(topology, contents, seed=None):
     random.seed(seed)
     source_nodes = get_sources(topology)
     content_placement = collections.defaultdict(set)
+
     for c in contents:
-        content_placement[random.choice(source_nodes)].add(c)
+        source_node = random.choice(source_nodes)
+        last_segment = c * n_segments
+        first_segment = last_segment - n_segments + 1
+        for s in range(first_segment, last_segment + 1):
+            content_placement[source_node].add(s)
+            
     apply_content_placement(content_placement, topology)
 
 
