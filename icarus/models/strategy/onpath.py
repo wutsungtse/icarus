@@ -33,8 +33,8 @@ class Centralised_LeastCachedFirst_UM(Strategy):
         super(Centralised_LeastCachedFirst_UM, self).__init__(view, controller)
 
     @inheritdoc(Strategy)
-    def process_event(self, time, receiver, content, log, n_segments=5000):
-        first_segment = content * n_segments
+    def process_event(self, time, receiver, content, log, n_segments=5):
+        first_segment = content
         last_segment = first_segment + n_segments - 1
         for segment in range(first_segment, last_segment):
             # Update the user cache-table (if time expires)
@@ -134,8 +134,8 @@ class Centralised_Random_UM(Strategy):
 
     @inheritdoc(Strategy)
     def process_event(self, time, receiver, content, n_segments, log):
-        last_segment = content
-        first_segment = last_segment - n_segments + 1
+        last_segment = content + n_segments
+        first_segment = content 
         segments = range(first_segment, last_segment + 1)
         for segment in segments:
             # Start session.
@@ -147,6 +147,7 @@ class Centralised_Random_UM(Strategy):
                     return None
             # Receiver does not cache the content, get all required data.
             content_locations = list(self.view.content_locations(segment))
+            print ("Content locations: " + str(content_locations) + " for " + str(content))
             destination = content_locations[0]
             path = self.view.shortest_path(receiver, destination)
             # Find the nearest content location and the corresponding shortest path.

@@ -47,7 +47,9 @@ DATA_COLLECTORS = [
 N_CONTENTS = 1 * 10 ** 2
 
 # Numer of segments per content object
-N_SEGMENTS = 5000
+N_SEGMENTS = 5
+
+N_CONTENTS = N_CONTENTS * N_SEGMENTS
 
 # Number of content requests generated to pre-populate the caches
 # These requests are not logged
@@ -68,6 +70,7 @@ ALPHA = [1.0]
 # Total size of network cache as a fraction of content population
 # Remove sizes not needed
 NETWORK_CACHE = [0.001, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+NETWORK_CACHE = [0.3]
 
 # Total cache budget
 # cache_budget = [nCache_budget, uCache_budget]

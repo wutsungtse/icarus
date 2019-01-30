@@ -1,1 +1,22 @@
+EXPERIMENT 1/1:
+  CONFIGURATION:
+   * workload -> name: STATIONARY, n_contents: 500, n_warmup: 100, rate: 1.0, n_measured: 300, n_segments: 5, alpha: 1.0
+   * cache_policy -> name: LRU
+   * strategy -> name: C_RANDOM_UM
+   * content_placement -> name: UNIFORM, n_contents: 500, n_segments: 5
+   * cache_placement -> name: UNIFORM_WITH_UCACHE, network_cache: 0.3, uCache_budget: 750.0, nCache_budget: 0.0
+   * topology -> name: ROCKET_FUEL_WITH_UCACHE, asn: 3257
+   * desc -> strategy: C_RANDOM_UM, network cache: 0.3
+  RESULTS:
+    OVERHEAD_DISTRIBUTION
+     * CV: 0.927020869229
+    LATENCY
+     * MEAN: 23.2273291925
+    CACHE_HIT_RATIO
+     * MEAN: 0.581295843521
+    CACHING_EFFICIENCY
+     * MEAN: 0.600378787879
+    CACHE_EVICTION
+     * MEAN: 8.58992805755
+
 

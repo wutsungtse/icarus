@@ -80,6 +80,7 @@ class Orchestrator(object):
         logger.info('Starting simulations: %d experiments, %d process(es)'
                     % (self.n_exp, self.n_proc))
 
+        print "HERE"
         if self.settings.PARALLEL_EXECUTION:
             # Starting from Python 3.2, multiprocessing.Pool.apply_async
             # accepts a new error_callback argument that is a callable for

@@ -20,5 +20,5 @@ export PYTHONPATH=${ICARUS_DIR}:$PYTHONPATH
 
 # Run experiments
 echo "Run experiments"
-icarus run --results ${RESULTS_FILE} ${CONFIG_FILE}
-icarus results print results.pickle > results.txt
+/opt/local/Library/Frameworks/Python.framework/Versions/2.7/bin/icarus run --results ${RESULTS_FILE} ${CONFIG_FILE}
+/opt/local/Library/Frameworks/Python.framework/Versions/2.7/bin/icarus results print results.pickle > results.txt

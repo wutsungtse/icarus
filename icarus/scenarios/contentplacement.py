@@ -56,13 +56,12 @@ def uniform_content_placement(topology, contents, n_contents, n_segments, seed=N
     random.seed(seed)
     source_nodes = get_sources(topology)
     content_placement = collections.defaultdict(set)
-
+    
+    source_node = random.choice(source_nodes)
     for c in contents:
-        source_node = random.choice(source_nodes)
-        last_segment = c * n_segments
-        first_segment = last_segment - n_segments + 1
-        for s in range(first_segment, last_segment + 1):
-            content_placement[source_node].add(s)
+        if c % n_segments == 1:
+            source_node = random.choice(source_nodes)
+        content_placement[source_node].add(c)
             
     apply_content_placement(content_placement, topology)
 
