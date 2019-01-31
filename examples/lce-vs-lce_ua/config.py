@@ -47,7 +47,7 @@ DATA_COLLECTORS = [
 N_CONTENTS = 1 * 10 ** 2
 
 # Numer of segments per content object
-N_SEGMENTS = 5
+N_SEGMENTS = 10
 
 N_CONTENTS = N_CONTENTS * N_SEGMENTS
 
@@ -70,7 +70,6 @@ ALPHA = [1.0]
 # Total size of network cache as a fraction of content population
 # Remove sizes not needed
 NETWORK_CACHE = [0.001, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-NETWORK_CACHE = [0.3]
 
 # Total cache budget
 # cache_budget = [nCache_budget, uCache_budget]
@@ -95,9 +94,9 @@ STRATEGIES = [
     # 'LCE',                 # Leave Copy Everywhere
     # 'LCE_USER_ASSISTED',   # Leave Copy Everywhere User-Assisted
     # 'C_RANDOM',
-    # 'C_LFR_UM',           # Centralised Largest Future Request First P2P
-    # 'C_LCF_UM',           # Centralised Least Cached First P2P
-    'C_RANDOM_UM',
+    'C_LFR_UM',           # Centralised Largest Future Request First with User-Matching
+    'C_LCF_UM',           # Centralised Least Cached First with User-Matching
+    'C_RANDOM_UM',        # Centralised Random with User-Matching
 ]
 
 # Instantiate experiment queue
@@ -134,8 +133,8 @@ for alpha in ALPHA:
                 experiment['workload']['alpha'] = alpha
                 experiment['strategy']['name'] = strategy
                 experiment['topology']['name'] = topology
-                experiment['cache_placement']['nCache_budget'] = cache_budget_factor[0] * N_CONTENTS * N_SEGMENTS * 0.1
-                experiment['cache_placement']['uCache_budget'] = cache_budget_factor[1] * N_CONTENTS * N_SEGMENTS * network_cache
+                experiment['cache_placement']['nCache_budget'] = cache_budget_factor[0] * N_CONTENTS * 0.1
+                experiment['cache_placement']['uCache_budget'] = cache_budget_factor[1] * N_CONTENTS * network_cache
                 experiment['cache_placement']['network_cache'] = network_cache
                 experiment['desc'] = "strategy: %s, network cache: %s" \
                                      % (strategy, str(network_cache))

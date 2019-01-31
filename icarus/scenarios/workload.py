@@ -90,7 +90,7 @@ class StationaryWorkload(object):
             raise ValueError('beta must be positive')
         self.receivers = [v for v in topology.nodes_iter()
                      if topology.node[v]['stack'][0] == 'receiver']
-        self.zipf = TruncatedZipfDist(alpha, n_contents)
+        self.zipf = TruncatedZipfDist(alpha, n_contents/n_segments)
         self.n_contents = n_contents
         self.n_segments = n_segments
         self.contents = range(1, n_contents+1) # A list of all segments.
@@ -115,8 +115,7 @@ class StationaryWorkload(object):
             else:
                 receiver = self.receivers[self.receiver_dist.rv() - 1]
             content = int(self.zipf.rv())
-            content = content/self.n_segments
-            content = (content*self.n_segments) + 1
+            content = (content - 1) * self.n_segments + 1
             log = (req_counter >= self.n_warmup)
             # content * n_segments = last segment of the content (because content index start from 1)
             event = {'receiver': receiver, 'content': content, 'n_segments': self.n_segments, 'log': log}

@@ -589,6 +589,20 @@ class NetworkController(object):
         if self.collector is not None and self.session['log']:
             self.collector.content_hop(u, v, main_path)
 
+    def sort_by_LFR(self, segments):
+        download_counts = []
+        for segment in segments:
+            download_count = self.model.user_download_table[segment]
+            download_counts.append(download_count)
+        return [x for _,x in sorted(zip(download_counts, segments))]
+
+    def sort_by_LCF(self, segments):
+        cache_counts = []
+        for segment in segments:
+            cache_count = self.model.user_cache_table[segment]
+            cache_counts.append(cache_count)
+        return [x for _,x in sorted(zip(cache_counts, segments))]
+
     def update_user_cache_table(self, time):
         if time >= self.model.expiry_time:
             # Update the user cache table.
