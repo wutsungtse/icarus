@@ -33,48 +33,52 @@ class Centralised_LeastCachedFirst_UM(Strategy):
         super(Centralised_LeastCachedFirst_UM, self).__init__(view, controller)
 
     @inheritdoc(Strategy)
-    def process_event(self, time, receiver, content, n_segments, log):
-        first_segment = content 
-        last_segment = content + n_segments - 1
-        segments = range(first_segment, last_segment + 1)
-        for segment in segments:
-            # Update the user cache-table (if time expires)
-            self.controller.update_user_cache_table(time)
-            # Start session.
-            self.controller.start_session(time, receiver, segment, log)
-            # Check if the receiver has already cached the content, if true, end the session.
-            if self.view.has_cache(receiver):
-                if self.controller.get_content(receiver):
-                    self.controller.end_session()
+    def process_event(self, time, receiver, content, n_segments, time_interval, log):
+        self.controller.update_user_cache_table(time, time_interval)
+        # Start session.
+        self.controller.start_session(time, receiver, content, log)
+        # Check if the receiver has already cached the content.
+        if self.view.has_cache(receiver):
+            if self.controller.get_content(receiver):
+                # If the segment is the last segment, cache all the previous segments starting from segment with least cache counts.
+                if content % n_segments == 0:
+                    segments = self.controller.sort_by_LCF(range(content-n_segments+1, content+1))
+                    for segment in segments:
+                        self.controller.start_session(time, receiver, segment, log)
+                        self.controller.put_content(receiver)
+                        self.controller.end_session()
                     return None
-            # Receiver does not cache the content, get all required data.
-            content_locations = list(self.view.content_locations(segment))
-            destination = content_locations[0]
-            path = self.view.shortest_path(receiver, destination)
-            # Find the nearest content location and the corresponding shortest path.
-            for content_location in content_locations:
-                current_path = self.view.shortest_path(receiver, content_location)
-                if len(current_path) < len(path):
-                    path = current_path
-                    destination = content_location
-            # Route request to destination.
-            for u, v in path_links(path):
-                self.controller.forward_request_hop(u, v)
-            # Get content from destination.
-            self.controller.get_content(destination)
-            # Route content to receiver.
-            path = list(reversed(path))
-            for u, v in path_links(path):
-                self.controller.forward_content_hop(u, v)
-            # End session.
-            self.controller.end_session()
-
-        segments = self.controller.sort_by_LCF(segments)
-
-        for segment in segments:
-            self.controller.start_session(time, receiver, segment, log)
-            self.controller.put_content(receiver)
-            self.controller.end_session()
+                self.controller.end_session()
+                return None
+        # Receiver does not cache the content, get all required data.
+        content_locations = list(self.view.content_locations(content))
+        # print ("Content locations: " + str(content_locations) + " for " + str(segment))
+        destination = content_locations[0]
+        path = self.view.shortest_path(receiver, destination)
+        # Find the nearest content location and the corresponding shortest path.
+        for content_location in content_locations:
+            current_path = self.view.shortest_path(receiver, content_location)
+            if len(current_path) < len(path):
+                path = current_path
+                destination = content_location
+        # Route request to destination.
+        for u, v in path_links(path):
+            self.controller.forward_request_hop(u, v)
+        # Get content from destination.
+        self.controller.get_content(destination)
+        # Route content to receiver.
+        path = list(reversed(path))
+        for u, v in path_links(path):
+            self.controller.forward_content_hop(u, v)
+        # If the segment is the last segment, cache all the previous segments starting from segment with least cache counts.
+        if content % n_segments == 0:
+            segments = self.controller.sort_by_LCF(range(content-n_segments+1, content+1))
+            for segment in segments:
+                self.controller.start_session(time, receiver, segment, log)
+                self.controller.put_content(receiver)
+                self.controller.end_session()
+            return None
+        self.controller.end_session()
 
 @register_strategy('C_LFR_UM')
 class Centralised_LargestFutureRequestFirst_UM(Strategy):
@@ -84,48 +88,52 @@ class Centralised_LargestFutureRequestFirst_UM(Strategy):
         super(Centralised_LargestFutureRequestFirst_UM, self).__init__(view, controller)
 
     @inheritdoc(Strategy)
-    def process_event(self, time, receiver, content, n_segments, log):
-        first_segment = content 
-        last_segment = content + n_segments - 1
-        segments = range(first_segment, last_segment + 1)
-        for segment in segments:
-            # Update the user download-table (if time expires).
-            self.controller.update_user_download_table(time)
-            # Start session.
-            self.controller.start_session(time, receiver, segment, log)
-            # Check if the receiver has already cached the content, if true, end the session.
-            if self.view.has_cache(receiver):
-                if self.controller.get_content(receiver):
-                    self.controller.end_session()
+    def process_event(self, time, receiver, content, n_segments, time_interval, log):
+        self.controller.update_user_download_table(time, time_interval)
+        # Start session.
+        self.controller.start_session(time, receiver, content, log)
+        # Check if the receiver has already cached the content.
+        if self.view.has_cache(receiver):
+            if self.controller.get_content(receiver):
+                # If the segment is the last segment, cache all the previous segments starting from segment with least download counts.
+                if content % n_segments == 0:
+                    segments = self.controller.sort_by_LFR(range(content-n_segments+1, content+1))
+                    for segment in segments:
+                        self.controller.start_session(time, receiver, segment, log)
+                        self.controller.put_content(receiver)
+                        self.controller.end_session()
                     return None
-            # Receiver does not cache the content, get all required data.
-            content_locations = list(self.view.content_locations(segment))
-            destination = content_locations[0]
-            path = self.view.shortest_path(receiver, destination)
-            # Find the nearest content location and the corresponding shortest path.
-            for content_location in content_locations:
-                current_path = self.view.shortest_path(receiver, content_location)
-                if len(current_path) < len(path):
-                    path = current_path
-                    destination = content_location
-            # Route request to destination.
-            for u, v in path_links(path):
-                self.controller.forward_request_hop(u, v)
-            # Get content from destination.
-            self.controller.get_content(destination)
-            # Route content to receiver.
-            path = list(reversed(path))
-            for u, v in path_links(path):
-                self.controller.forward_content_hop(u, v)
-            # End session.
-            self.controller.end_session()
-
-        segments = self.controller.sort_by_LFR(segments)
-
-        for segment in segments:
-            self.controller.start_session(time, receiver, segment, log)
-            self.controller.put_content(receiver)
-            self.controller.end_session()
+                self.controller.end_session()
+                return None
+        # Receiver does not cache the content, get all required data.
+        content_locations = list(self.view.content_locations(content))
+        # print ("Content locations: " + str(content_locations) + " for " + str(segment))
+        destination = content_locations[0]
+        path = self.view.shortest_path(receiver, destination)
+        # Find the nearest content location and the corresponding shortest path.
+        for content_location in content_locations:
+            current_path = self.view.shortest_path(receiver, content_location)
+            if len(current_path) < len(path):
+                path = current_path
+                destination = content_location
+        # Route request to destination.
+        for u, v in path_links(path):
+            self.controller.forward_request_hop(u, v)
+        # Get content from destination.
+        self.controller.get_content(destination)
+        # Route content to receiver.
+        path = list(reversed(path))
+        for u, v in path_links(path):
+            self.controller.forward_content_hop(u, v)
+        # If the segment is the last segment, cache all the previous segments starting from segment with least download counts.
+        if content % n_segments == 0:
+            segments = self.controller.sort_by_LFR(range(content-n_segments+1, content+1))
+            for segment in segments:
+                self.controller.start_session(time, receiver, segment, log)
+                self.controller.put_content(receiver)
+                self.controller.end_session()
+            return None
+        self.controller.end_session()
 
 @register_strategy('C_RANDOM_UM')
 class Centralised_Random_UM(Strategy):
@@ -135,44 +143,53 @@ class Centralised_Random_UM(Strategy):
         super(Centralised_Random_UM, self).__init__(view, controller)
 
     @inheritdoc(Strategy)
-    def process_event(self, time, receiver, content, n_segments, log):
-        first_segment = content 
-        last_segment = content + n_segments - 1
-        segments = range(first_segment, last_segment + 1)
-        for segment in segments:
-            # Start session.
-            self.controller.start_session(time, receiver, segment, log)
-            # Check if the receiver has already cached the content, if true, end the session.
-            if self.view.has_cache(receiver):
-                if self.controller.get_content(receiver):
-                    self.controller.end_session()
+    def process_event(self, time, receiver, content, n_segments, time_interval, log):
+        # Start session.
+        self.controller.start_session(time, receiver, content, log)
+        # Check if the receiver has already cached the content.
+        if self.view.has_cache(receiver):
+            if self.controller.get_content(receiver):
+                # If the segment is the last segment, cache all the previous segments in a random order.
+                if content % n_segments == 0:
+                    segments = range(content-n_segments+1, content+1)
+                    random.shuffle(segments)
+                    for segment in segments:
+                        self.controller.start_session(time, receiver, segment, log)
+                        self.controller.put_content(receiver)
+                        self.controller.end_session()
                     return None
-            # Receiver does not cache the content, get all required data.
-            content_locations = list(self.view.content_locations(segment))
-            # print ("Content locations: " + str(content_locations) + " for " + str(segment))
-            destination = content_locations[0]
-            path = self.view.shortest_path(receiver, destination)
-            # Find the nearest content location and the corresponding shortest path.
-            for content_location in content_locations:
-                current_path = self.view.shortest_path(receiver, content_location)
-                if len(current_path) < len(path):
-                    path = current_path
-                    destination = content_location
-            # Route request to destination.
-            for u, v in path_links(path):
-                self.controller.forward_request_hop(u, v)
-            # Get content from destination.
-            self.controller.get_content(destination)
-            # Route content to receiver.
-            path = list(reversed(path))
-            for u, v in path_links(path):
-                self.controller.forward_content_hop(u, v)
-            self.controller.end_session()
-        random.shuffle(segments)
-        for segment in segments:
-            self.controller.start_session(time, receiver, segment, log)
-            self.controller.put_content(receiver)
-            self.controller.end_session()
+                self.controller.end_session()
+                return None
+        # Receiver does not cache the content, get all required data.
+        content_locations = list(self.view.content_locations(content))
+        # print ("Content locations: " + str(content_locations) + " for " + str(segment))
+        destination = content_locations[0]
+        path = self.view.shortest_path(receiver, destination)
+        # Find the nearest content location and the corresponding shortest path.
+        for content_location in content_locations:
+            current_path = self.view.shortest_path(receiver, content_location)
+            if len(current_path) < len(path):
+                path = current_path
+                destination = content_location
+        # Route request to destination.
+        for u, v in path_links(path):
+            self.controller.forward_request_hop(u, v)
+        # Get content from destination.
+        self.controller.get_content(destination)
+        # Route content to receiver.
+        path = list(reversed(path))
+        for u, v in path_links(path):
+            self.controller.forward_content_hop(u, v)
+        # If the segment is the last segment, cache all the previous segments in a random order.
+        if content % n_segments == 0:
+            segments = range(content-n_segments+1, content+1)
+            random.shuffle(segments)
+            for segment in segments:
+                self.controller.start_session(time, receiver, segment, log)
+                self.controller.put_content(receiver)
+                self.controller.end_session()
+            return None
+        self.controller.end_session()
 
 @register_strategy('C_RANDOM')
 class Centralised_Random(Strategy):

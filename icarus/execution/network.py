@@ -408,10 +408,11 @@ class NetworkModel(object):
                 if 'cache_size' in stack_props:
                     cache_size[node] = stack_props['cache_size']
             elif stack_name == 'source':
-                contents = stack_props['contents']
-                self.source_node[node] = contents
-                for content in contents:
-                    self.content_source[content] = node
+                if 'contents' in stack_props.keys():
+                    contents = stack_props['contents']
+                    self.source_node[node] = contents
+                    for content in contents:
+                        self.content_source[content] = node
         if any(c < 1 for c in cache_size.values()):
             logger.warn('Some content caches have size equal to 0. '
                         'I am setting them to 1 and run the experiment anyway')
@@ -424,11 +425,6 @@ class NetworkModel(object):
         # The actual cache objects storing the content
         self.cache = {node: CACHE_POLICY[policy_name](cache_size[node], **policy_args)
                           for node in cache_size}
-
-        # Iime interval for receiving caching guidance from central server.
-        self.time_interval = 60
-        # Set the initial expiry time equal to time interval.
-        self.expiry_time = self.time_interval
 
         # Content-Download Information (Key=content, Value=number of downloads)
         self.central_download_table = collections.Counter()
@@ -473,6 +469,7 @@ class NetworkController(object):
         self.session = None
         self.model = model
         self.collector = None
+        self.expiry_time = 0
 
     def attach_collector(self, collector):
         """Attach a data collector to which all events will be reported.
@@ -603,25 +600,25 @@ class NetworkController(object):
             cache_counts.append(cache_count)
         return [x for _,x in sorted(zip(cache_counts, segments))]
 
-    def update_user_cache_table(self, time):
-        if time >= self.model.expiry_time:
+    def update_user_cache_table(self, time, time_interval):
+        if time >= self.expiry_time:
             # Update the user cache table.
             self.model.user_cache_table = copy.deepcopy(self.model.central_cache_table)
             # Reset the central cache table.
             self.model.central_cache_table.clear()
             # Calculate the next expiry time.
-            self.model.expiry_time += self.model.time_interval
-            # print 'Current Time: ', time, '| Next Expiry Time: ', self.model.expiry_time
+            self.expiry_time += time_interval
+            #print 'Current Time: ', time, '| Next Expiry Time: ', self.expiry_time, '| Interval: ', time_interval
 
-    def update_user_download_table(self, time):
-        if time >= self.model.expiry_time:
+    def update_user_download_table(self, time, time_interval):
+        if time >= self.expiry_time:
             # Update the user download table.
             self.model.user_download_table = copy.deepcopy(self.model.central_download_table)
             # Re-set the central download table.
             self.model.central_download_table.clear()
             # Calculate the next expiry time.
-            self.model.expiry_time += self.model.time_interval
-            # print 'Current Time: ', time, '| Next Expiry Time: ', self.model.expiry_time
+            self.expiry_time += time_interval
+            #print 'Current Time: ', time, '| Next Expiry Time: ', self.expiry_time, '| Interval: ', time_interval
 
     def put_content(self, node):
         """Store content in the specified node.

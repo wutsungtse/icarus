@@ -44,19 +44,21 @@ DATA_COLLECTORS = [
 # Default experiment values, i.e. values shared by all experiments
 
 # Number of content objects
-N_CONTENTS = 1 * 10 ** 2
+N_CONTENTS = 1 * 10 ** 0
 
 # Numer of segments per content object
-N_SEGMENTS = 10
+N_SEGMENTS = 5000
+
+TIME_INTERVALS = [1, 60]
 
 N_CONTENTS = N_CONTENTS * N_SEGMENTS
 
 # Number of content requests generated to pre-populate the caches
 # These requests are not logged
-N_WARMUP_REQUESTS = 1 * 10 ** 2
+N_WARMUP_REQUESTS = 2 * 10 ** 1
 
 # Number of content requests that are measured after warmup
-N_MEASURED_REQUESTS = 3 * 10 ** 2
+N_MEASURED_REQUESTS = 6 * 10 ** 1
 
 # Number of requests per second (over the whole network)
 REQ_RATE = 1.0
@@ -69,7 +71,7 @@ ALPHA = [1.0]
 
 # Total size of network cache as a fraction of content population
 # Remove sizes not needed
-NETWORK_CACHE = [0.001, 0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+NETWORK_CACHE = [0.001, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 
 # Total cache budget
 # cache_budget = [nCache_budget, uCache_budget]
@@ -96,7 +98,7 @@ STRATEGIES = [
     # 'C_RANDOM',
     'C_LFR_UM',           # Centralised Largest Future Request First with User-Matching
     'C_LCF_UM',           # Centralised Least Cached First with User-Matching
-    'C_RANDOM_UM',        # Centralised Random with User-Matching
+    #'C_RANDOM_UM',        # Centralised Random with User-Matching
 ]
 
 # Instantiate experiment queue
@@ -105,12 +107,12 @@ EXPERIMENT_QUEUE = deque()
 # Build a default experiment configuration which is going to be used by all
 # experiments of the campaign
 default = Tree()
-default['workload'] = {'name':       'STATIONARY',
-                       'n_contents': N_CONTENTS,
-                       'n_segments': N_SEGMENTS, 
-                       'n_warmup':   N_WARMUP_REQUESTS,
-                       'n_measured': N_MEASURED_REQUESTS,
-                       'rate':       REQ_RATE}
+default['workload'] = {'name':          'STATIONARY',
+                       'n_contents':    N_CONTENTS,
+                       'n_segments':    N_SEGMENTS,
+                       'n_warmup':      N_WARMUP_REQUESTS,
+                       'n_measured':    N_MEASURED_REQUESTS,
+                       'rate':          REQ_RATE}
 
 default['cache_placement']['name'] = 'UNIFORM_WITH_UCACHE'
 
@@ -127,15 +129,17 @@ default['topology'] = {'asn':  3257,  # Tiscali (Europe)
 for alpha in ALPHA:
     for strategy in STRATEGIES:
         for topology in TOPOLOGIES:
-          for cache_budget_factor in CACHE_BUDGET_FACTORS:
-            for network_cache in NETWORK_CACHE:
-                experiment = copy.deepcopy(default)
-                experiment['workload']['alpha'] = alpha
-                experiment['strategy']['name'] = strategy
-                experiment['topology']['name'] = topology
-                experiment['cache_placement']['nCache_budget'] = cache_budget_factor[0] * N_CONTENTS * 0.1
-                experiment['cache_placement']['uCache_budget'] = cache_budget_factor[1] * N_CONTENTS * network_cache
-                experiment['cache_placement']['network_cache'] = network_cache
-                experiment['desc'] = "strategy: %s, network cache: %s" \
-                                     % (strategy, str(network_cache))
-                EXPERIMENT_QUEUE.append(experiment)
+          for time_interval in TIME_INTERVALS:
+            for cache_budget_factor in CACHE_BUDGET_FACTORS:
+              for network_cache in NETWORK_CACHE:
+                  experiment = copy.deepcopy(default)
+                  experiment['workload']['alpha'] = alpha
+                  experiment['workload']['time_interval'] = time_interval
+                  experiment['strategy']['name'] = strategy
+                  experiment['topology']['name'] = topology
+                  experiment['cache_placement']['nCache_budget'] = cache_budget_factor[0] * N_CONTENTS * 161 * 0.1
+                  experiment['cache_placement']['uCache_budget'] = cache_budget_factor[1] * N_CONTENTS * 161 * network_cache
+                  experiment['cache_placement']['network_cache'] = network_cache
+                  experiment['desc'] = "strategy: %s, time interval: %s, network cache: %s" \
+                                       % (strategy, str(time_interval), str(network_cache))
+                  EXPERIMENT_QUEUE.append(experiment)
