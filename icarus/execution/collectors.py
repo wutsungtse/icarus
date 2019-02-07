@@ -23,6 +23,7 @@ __all__ = [
     'CachingEfficiencyCollector', # Last modiefied: 2018.12.08
     'CacheEvictionCollector', # Last modiefied: 2018.12.07
     'OverheadDistributionCollector', # Last modified: 2018.12.06
+    'SegmentPerformanceDifferenceCollector',
     'CollectorProxy',
     'CacheHitRatioCollector',
     'LinkLoadCollector',
@@ -159,6 +160,29 @@ class DataCollector(object):
             Dictionary mapping metric with results.
         """
         pass
+
+@register_data_collector('SEGMENT_PERFORMANCE_DIFFERENCE')
+class SegmentPerformanceDifferenceCollector(DataCollector):
+    def __init__(self, view):
+        self.view = view
+        self.curr_cont = None
+        self.cache_hits = collections.Counter()
+        print "IM HERE"
+
+    @inheritdoc(DataCollector)
+    def start_session(self, timestamp, receiver, content):
+        self.curr_cont = content
+
+    @inheritdoc(DataCollector)
+    def cache_hit(self, node):
+        self.cache_hits[self.curr_cont] += 1
+
+    @inheritdoc(DataCollector)
+    def results(self):
+        sample = self.cache_hits.values()
+        cv = np.std(sample)/np.mean(sample)
+        results = Tree({'CV': cv})
+        return results
 
 @register_data_collector('CACHING_EFFICIENCY')
 class CachingEfficiencyCollector(DataCollector):

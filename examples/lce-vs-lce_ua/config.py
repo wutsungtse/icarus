@@ -32,9 +32,10 @@ N_REPLICATIONS = 1
 DATA_COLLECTORS = [
            'CACHE_HIT_RATIO',  # Measure cache hit ratio
            'LATENCY',  # Measure request and response latency (based on static link delays)
-           'OVERHEAD_DISTRIBUTION',
-           'CACHE_EVICTION',
-           'CACHING_EFFICIENCY'
+           'OVERHEAD_DISTRIBUTION', # Coefficient of Variation on Cache Hits
+           'CACHE_EVICTION', # Average number of evictions per uCache
+           'CACHING_EFFICIENCY',
+           'SEGMENT_PERFORMANCE_DIFFERENCE', 
                    ]
 
 
@@ -44,21 +45,23 @@ DATA_COLLECTORS = [
 # Default experiment values, i.e. values shared by all experiments
 
 # Number of content objects
-N_CONTENTS = 1 * 10 ** 0
+N_CONTENTS = 1
 
 # Numer of segments per content object
-N_SEGMENTS = 5000
+N_SEGMENTS = 1
 
-TIME_INTERVALS = [1, 60]
+TIME_INTERVALS = [#1, 60, 
+                  None,
+                  ]
 
 N_CONTENTS = N_CONTENTS * N_SEGMENTS
 
 # Number of content requests generated to pre-populate the caches
 # These requests are not logged
-N_WARMUP_REQUESTS = 2 * 10 ** 1
+N_WARMUP_REQUESTS = 1000
 
 # Number of content requests that are measured after warmup
-N_MEASURED_REQUESTS = 6 * 10 ** 1
+N_MEASURED_REQUESTS = 1000
 
 # Number of requests per second (over the whole network)
 REQ_RATE = 1.0
@@ -72,10 +75,10 @@ ALPHA = [1.0]
 # Total size of network cache as a fraction of content population
 # Remove sizes not needed
 NETWORK_CACHE = [0.001, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+NETWORK_CACHE = [1]
 
 # Total cache budget
 # cache_budget = [nCache_budget, uCache_budget]
-
 CACHE_BUDGET_FACTORS = [ # [1.0, 0], # nCache only
                          # [1.0, 1.0], # Both nCache and uCache
                          [0, 1.0], # uCache only
@@ -96,9 +99,9 @@ STRATEGIES = [
     # 'LCE',                 # Leave Copy Everywhere
     # 'LCE_USER_ASSISTED',   # Leave Copy Everywhere User-Assisted
     # 'C_RANDOM',
-    'C_LFR_UM',           # Centralised Largest Future Request First with User-Matching
-    'C_LCF_UM',           # Centralised Least Cached First with User-Matching
-    #'C_RANDOM_UM',        # Centralised Random with User-Matching
+    #'C_LFR_UM',           # Centralised Largest Future Request First with User-Matching
+    #'C_LCF_UM',           # Centralised Least Cached First with User-Matching
+    'C_RANDOM_UM',        # Centralised Random with User-Matching
 ]
 
 # Instantiate experiment queue

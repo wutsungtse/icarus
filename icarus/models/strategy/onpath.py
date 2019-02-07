@@ -42,12 +42,14 @@ class Centralised_LeastCachedFirst_UM(Strategy):
             if self.controller.get_content(receiver):
                 # If the segment is the last segment, cache all the previous segments starting from segment with least cache counts.
                 if content % n_segments == 0:
+                    self.controller.end_session()
                     segments = self.controller.sort_by_LCF(range(content-n_segments+1, content+1))
                     for segment in segments:
                         self.controller.start_session(time, receiver, segment, log)
                         self.controller.put_content(receiver)
                         self.controller.end_session()
                     return None
+            else:
                 self.controller.end_session()
                 return None
         # Receiver does not cache the content, get all required data.
@@ -72,13 +74,16 @@ class Centralised_LeastCachedFirst_UM(Strategy):
             self.controller.forward_content_hop(u, v)
         # If the segment is the last segment, cache all the previous segments starting from segment with least cache counts.
         if content % n_segments == 0:
+            self.controller.end_session()
             segments = self.controller.sort_by_LCF(range(content-n_segments+1, content+1))
             for segment in segments:
                 self.controller.start_session(time, receiver, segment, log)
                 self.controller.put_content(receiver)
                 self.controller.end_session()
             return None
-        self.controller.end_session()
+        else:
+            self.controller.end_session()
+            return None
 
 @register_strategy('C_LFR_UM')
 class Centralised_LargestFutureRequestFirst_UM(Strategy):
@@ -97,14 +102,16 @@ class Centralised_LargestFutureRequestFirst_UM(Strategy):
             if self.controller.get_content(receiver):
                 # If the segment is the last segment, cache all the previous segments starting from segment with least download counts.
                 if content % n_segments == 0:
+                    self.controller.end_session()
                     segments = self.controller.sort_by_LFR(range(content-n_segments+1, content+1))
                     for segment in segments:
                         self.controller.start_session(time, receiver, segment, log)
                         self.controller.put_content(receiver)
                         self.controller.end_session()
                     return None
-                self.controller.end_session()
-                return None
+                else:
+                    self.controller.end_session()
+                    return None
         # Receiver does not cache the content, get all required data.
         content_locations = list(self.view.content_locations(content))
         # print ("Content locations: " + str(content_locations) + " for " + str(segment))
@@ -127,13 +134,16 @@ class Centralised_LargestFutureRequestFirst_UM(Strategy):
             self.controller.forward_content_hop(u, v)
         # If the segment is the last segment, cache all the previous segments starting from segment with least download counts.
         if content % n_segments == 0:
+            self.controller.end_session()
             segments = self.controller.sort_by_LFR(range(content-n_segments+1, content+1))
             for segment in segments:
                 self.controller.start_session(time, receiver, segment, log)
                 self.controller.put_content(receiver)
                 self.controller.end_session()
             return None
-        self.controller.end_session()
+        else:
+            self.controller.end_session()
+            return None
 
 @register_strategy('C_RANDOM_UM')
 class Centralised_Random_UM(Strategy):
@@ -151,6 +161,7 @@ class Centralised_Random_UM(Strategy):
             if self.controller.get_content(receiver):
                 # If the segment is the last segment, cache all the previous segments in a random order.
                 if content % n_segments == 0:
+                    self.controller.end_session()
                     segments = range(content-n_segments+1, content+1)
                     random.shuffle(segments)
                     for segment in segments:
@@ -158,8 +169,10 @@ class Centralised_Random_UM(Strategy):
                         self.controller.put_content(receiver)
                         self.controller.end_session()
                     return None
-                self.controller.end_session()
-                return None
+                else:
+                    self.controller.end_session()
+                    return None
+
         # Receiver does not cache the content, get all required data.
         content_locations = list(self.view.content_locations(content))
         # print ("Content locations: " + str(content_locations) + " for " + str(segment))
@@ -182,14 +195,15 @@ class Centralised_Random_UM(Strategy):
             self.controller.forward_content_hop(u, v)
         # If the segment is the last segment, cache all the previous segments in a random order.
         if content % n_segments == 0:
+            self.controller.end_session()
             segments = range(content-n_segments+1, content+1)
             random.shuffle(segments)
             for segment in segments:
                 self.controller.start_session(time, receiver, segment, log)
                 self.controller.put_content(receiver)
                 self.controller.end_session()
-            return None
-        self.controller.end_session()
+        else:
+            self.controller.end_session()
 
 @register_strategy('C_RANDOM')
 class Centralised_Random(Strategy):

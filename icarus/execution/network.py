@@ -469,7 +469,7 @@ class NetworkController(object):
         self.session = None
         self.model = model
         self.collector = None
-        self.expiry_time = 0
+        self.expiry_time = 0.0
 
     def attach_collector(self, collector):
         """Attach a data collector to which all events will be reported.
@@ -639,7 +639,7 @@ class NetworkController(object):
             The evicted object or *None* if no contents were evicted.
         """
         if node in self.model.cache:
-            cache_is_full = self.model.cache[node].__len__() == self.model.cache[node]._maxlen
+            cache_is_full = (self.model.cache[node].__len__() >= self.model.cache[node]._maxlen)
             evicted_content = None
             # Check if the cache is full.
             if cache_is_full:
@@ -685,23 +685,24 @@ class NetworkController(object):
             True if the content is available, False otherwise
         """
 
+        content = self.session['content']
         if node in self.model.cache:
-            cache_hit = self.model.cache[node].get(self.session['content'])
+            cache_hit = self.model.cache[node].get(content)
             if cache_hit:
                 if self.session['log']:
                     self.collector.cache_hit(node)
                 # Update the central content-download table
-                self.model.central_download_table[self.session['content']] += 1
+                self.model.central_download_table[content] += 1
             else:
                 if self.session['log']:
                     self.collector.cache_miss(node)
             return cache_hit
         name, props = fnss.get_stack(self.model.topology, node)
-        if name == 'source' and self.session['content'] in props['contents']:
+        if name == 'source' and content in props['contents']:
             if self.collector is not None and self.session['log']:
                 self.collector.server_hit(node)
             # Update the content-download table
-            self.model.central_download_table[self.session['content']] += 1
+            self.model.central_download_table[content] += 1
             return True
         else:
             return False

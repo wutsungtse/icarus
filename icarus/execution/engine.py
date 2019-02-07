@@ -5,6 +5,7 @@ experiments needs to be run, instantiates all the required classes and executes
 the experiment by iterating through the event provided by an event generator
 and providing them to a strategy instance.
 """
+from progress.bar import IncrementalBar
 from icarus.execution import NetworkModel, NetworkView, NetworkController, CollectorProxy
 from icarus.registry import DATA_COLLECTOR, STRATEGY
 
@@ -44,7 +45,6 @@ def exec_experiment(topology, workload, netconf, strategy, cache_policy, collect
         A tree with the aggregated simulation results from all collectors
     """
 
-    print "HERE"
     model = NetworkModel(topology, cache_policy, **netconf)
     view = NetworkView(model)
     controller = NetworkController(model)
@@ -57,7 +57,10 @@ def exec_experiment(topology, workload, netconf, strategy, cache_policy, collect
     strategy_name = strategy['name']
     strategy_args = {k: v for k, v in strategy.items() if k != 'name'}
     strategy_inst = STRATEGY[strategy_name](view, controller, **strategy_args)
-    print "HERE 1"
+
     for time, event in workload:
         strategy_inst.process_event(time, **event)
+        print "Time: ", time
+        print event
+        print "Event Finished"
     return collector.results()
