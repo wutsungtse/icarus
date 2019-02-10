@@ -167,7 +167,6 @@ class SegmentPerformanceDifferenceCollector(DataCollector):
         self.view = view
         self.curr_cont = None
         self.cache_hits = collections.Counter()
-        print "IM HERE"
 
     @inheritdoc(DataCollector)
     def start_session(self, timestamp, receiver, content):
@@ -218,8 +217,8 @@ class CacheEvictionCollector(DataCollector):
     @inheritdoc(DataCollector)
     def results(self):
         sample = self.cache_evictions.values()
-        mean = np.mean(sample)
-        results = Tree({'MEAN': np.mean(sample)})
+        mean = np.mean(sample) if len(sample) > 0 else 0
+        results = Tree({'MEAN': mean})
         return results
 
 @register_data_collector('OVERHEAD_DISTRIBUTION')

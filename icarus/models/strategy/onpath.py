@@ -40,17 +40,14 @@ class Centralised_LeastCachedFirst_UM(Strategy):
         # Check if the receiver has already cached the content.
         if self.view.has_cache(receiver):
             if self.controller.get_content(receiver):
-                # If the segment is the last segment, cache all the previous segments starting from segment with least cache counts.
+                self.controller.end_session()
+                # If the segment is the last segment, cache all the previous segments starting from segment with least download counts. 
                 if content % n_segments == 0:
-                    self.controller.end_session()
                     segments = self.controller.sort_by_LCF(range(content-n_segments+1, content+1))
                     for segment in segments:
                         self.controller.start_session(time, receiver, segment, log)
                         self.controller.put_content(receiver)
                         self.controller.end_session()
-                    return None
-            else:
-                self.controller.end_session()
                 return None
         # Receiver does not cache the content, get all required data.
         content_locations = list(self.view.content_locations(content))
@@ -72,18 +69,14 @@ class Centralised_LeastCachedFirst_UM(Strategy):
         path = list(reversed(path))
         for u, v in path_links(path):
             self.controller.forward_content_hop(u, v)
-        # If the segment is the last segment, cache all the previous segments starting from segment with least cache counts.
+        self.controller.end_session()
+        # If the segment is the last segment, cache all the previous segments starting from segment with least download counts.
         if content % n_segments == 0:
-            self.controller.end_session()
             segments = self.controller.sort_by_LCF(range(content-n_segments+1, content+1))
             for segment in segments:
                 self.controller.start_session(time, receiver, segment, log)
                 self.controller.put_content(receiver)
                 self.controller.end_session()
-            return None
-        else:
-            self.controller.end_session()
-            return None
 
 @register_strategy('C_LFR_UM')
 class Centralised_LargestFutureRequestFirst_UM(Strategy):
@@ -100,18 +93,15 @@ class Centralised_LargestFutureRequestFirst_UM(Strategy):
         # Check if the receiver has already cached the content.
         if self.view.has_cache(receiver):
             if self.controller.get_content(receiver):
-                # If the segment is the last segment, cache all the previous segments starting from segment with least download counts.
+                self.controller.end_session()
+                # If the segment is the last segment, cache all the previous segments starting from segment with least download counts. 
                 if content % n_segments == 0:
-                    self.controller.end_session()
                     segments = self.controller.sort_by_LFR(range(content-n_segments+1, content+1))
                     for segment in segments:
                         self.controller.start_session(time, receiver, segment, log)
                         self.controller.put_content(receiver)
                         self.controller.end_session()
-                    return None
-                else:
-                    self.controller.end_session()
-                    return None
+                return None
         # Receiver does not cache the content, get all required data.
         content_locations = list(self.view.content_locations(content))
         # print ("Content locations: " + str(content_locations) + " for " + str(segment))
@@ -132,18 +122,14 @@ class Centralised_LargestFutureRequestFirst_UM(Strategy):
         path = list(reversed(path))
         for u, v in path_links(path):
             self.controller.forward_content_hop(u, v)
+        self.controller.end_session()
         # If the segment is the last segment, cache all the previous segments starting from segment with least download counts.
         if content % n_segments == 0:
-            self.controller.end_session()
             segments = self.controller.sort_by_LFR(range(content-n_segments+1, content+1))
             for segment in segments:
                 self.controller.start_session(time, receiver, segment, log)
                 self.controller.put_content(receiver)
                 self.controller.end_session()
-            return None
-        else:
-            self.controller.end_session()
-            return None
 
 @register_strategy('C_RANDOM_UM')
 class Centralised_Random_UM(Strategy):
@@ -385,7 +371,7 @@ class LeaveCopyEverywhere_UserAssisted(Strategy):
         super(LeaveCopyEverywhere_UserAssisted, self).__init__(view, controller)
 
     @inheritdoc(Strategy)
-    def process_event(self, time, receiver, content, log):
+    def process_event(self, time, receiver, content, n_segments, time_interval, log):
         # Start session.
         self.controller.start_session(time, receiver, content, log)
         # Check if the receiver has already cached the content, if true, end the session.

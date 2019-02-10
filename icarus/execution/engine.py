@@ -60,7 +60,4 @@ def exec_experiment(topology, workload, netconf, strategy, cache_policy, collect
 
     for time, event in workload:
         strategy_inst.process_event(time, **event)
-        print "Time: ", time
-        print event
-        print "Event Finished"
     return collector.results()

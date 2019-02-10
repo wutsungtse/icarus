@@ -603,7 +603,7 @@ class NetworkController(object):
     def update_user_cache_table(self, time, time_interval):
         if time >= self.expiry_time:
             # Update the user cache table.
-            self.model.user_cache_table = copy.deepcopy(self.model.central_cache_table)
+            self.model.user_cache_table = copy.copy(self.model.central_cache_table)
             # Reset the central cache table.
             self.model.central_cache_table.clear()
             # Calculate the next expiry time.
@@ -613,7 +613,7 @@ class NetworkController(object):
     def update_user_download_table(self, time, time_interval):
         if time >= self.expiry_time:
             # Update the user download table.
-            self.model.user_download_table = copy.deepcopy(self.model.central_download_table)
+            self.model.user_download_table = copy.copy(self.model.central_download_table)
             # Re-set the central download table.
             self.model.central_download_table.clear()
             # Calculate the next expiry time.

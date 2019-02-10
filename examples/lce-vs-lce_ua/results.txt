@@ -1,1 +1,47 @@
+EXPERIMENT 1/2:
+  CONFIGURATION:
+   * workload -> name: STATIONARY, time_interval: 60, n_contents: 5000, n_warmup: 250, rate: 10.0, n_measured: 500, n_segments: 5000, alpha: 1.0
+   * cache_policy -> name: LRU
+   * strategy -> name: C_LCF_UM
+   * content_placement -> name: UNIFORM, n_contents: 5000, n_segments: 5000
+   * cache_placement -> name: UNIFORM_WITH_UCACHE, network_cache: 0.5, uCache_budget: 402500.0, nCache_budget: 0.0
+   * topology -> name: ROCKET_FUEL_WITH_UCACHE, asn: 3257
+   * desc -> strategy: C_LCF_UM, time interval: 60, network cache: 0.5
+  RESULTS:
+    LATENCY
+     * MEAN: 22.0874736
+    CACHING_EFFICIENCY
+     * MEAN: 0.498
+    SEGMENT_PERFORMANCE_DIFFERENCE
+     * CV: 0.0
+    OVERHEAD_DISTRIBUTION
+     * CV: 0.508598011084
+    CACHE_EVICTION
+     * MEAN: 15464.7435897
+    CACHE_HIT_RATIO
+     * MEAN: 0.498
+
+EXPERIMENT 2/2:
+  CONFIGURATION:
+   * workload -> name: STATIONARY, time_interval: 60, n_contents: 5000, n_warmup: 250, rate: 10.0, n_measured: 500, n_segments: 5000, alpha: 1.0
+   * cache_policy -> name: LRU
+   * strategy -> name: C_LFR_UM
+   * content_placement -> name: UNIFORM, n_contents: 5000, n_segments: 5000
+   * cache_placement -> name: UNIFORM_WITH_UCACHE, network_cache: 0.5, uCache_budget: 402500.0, nCache_budget: 0.0
+   * topology -> name: ROCKET_FUEL_WITH_UCACHE, asn: 3257
+   * desc -> strategy: C_LFR_UM, time interval: 60, network cache: 0.5
+  RESULTS:
+    LATENCY
+     * MEAN: 17.381896
+    CACHING_EFFICIENCY
+     * MEAN: 0.70379172105
+    SEGMENT_PERFORMANCE_DIFFERENCE
+     * CV: 0.575270742394
+    OVERHEAD_DISTRIBUTION
+     * CV: 0.586632354594
+    CACHE_EVICTION
+     * MEAN: 13975.5806452
+    CACHE_HIT_RATIO
+     * MEAN: 0.6330508
+
 

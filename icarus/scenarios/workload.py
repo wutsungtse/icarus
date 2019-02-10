@@ -93,7 +93,6 @@ class StationaryWorkload(object):
         self.receivers = [v for v in topology.nodes_iter()
                      if topology.node[v]['stack'][0] == 'receiver']
         self.zipf = TruncatedZipfDist(alpha, n_contents/n_segments)
-        print "n_contents: ", n_contents, "n_segments: ", n_segments
         self.time_interval = time_interval
         self.n_contents = n_contents
         self.n_segments = n_segments
@@ -113,8 +112,8 @@ class StationaryWorkload(object):
     def __iter__(self):
         req_counter = 0
         t_event = 0.0
-        event_dict = dict() #Dictionary: key=time, value=event object
-        time_heap = [] #Heap_queue: item=time
+        event_dict = dict() # Dictionary: key=time, value=event object
+        time_heap = [] # Heap_queue: item=time
 
         while req_counter <= self.n_warmup + self.n_measured:
             t_event += (random.expovariate(self.rate))
@@ -122,9 +121,9 @@ class StationaryWorkload(object):
             event_time = time_heap[0] if len(time_heap) > 0 else None
             while event_time is not None and event_time < t_event:
                 event = event_dict[event_time]
-                yield(event_time, event)
-                heapq.heappop(time_heap) #Remove the time from heapq.
-                del event_dict[event_time] #Remove the time-event pair from dictionary.
+                yield (event_time, event)
+                heapq.heappop(time_heap) # Remove the time from heapq.
+                del event_dict[event_time] # Remove the time-event pair from dictionary.
                 # If it is not the last segment, append the event for next segment.
                 if event['content'] % self.n_segments != 0:
                     new_event_time = event_time + self.delay
@@ -134,20 +133,23 @@ class StationaryWorkload(object):
                     event_dict[new_event_time] = new_event
                 event_time = time_heap[0] if len(time_heap) > 0 else None
 
-            if req_counter >= (self.n_warmup + self.n_measured):
-                # Skip below if we already sent all the requests.
-                continue
+            if req_counter == (self.n_warmup + self.n_measured):
+                # Exit the method when there is no pending event and all requests are sent.
+                if len(time_heap) == 0:
+                    break
+                else:
+                    continue
 
             if self.beta == 0:
                 receiver = random.choice(self.receivers)
             else:
                 receiver = self.receivers[self.receiver_dist.rv() - 1]
             content = int(self.zipf.rv())
-            content = (content - 1) * self.n_segments + 1 #This gives the first segment of the content.
+            content = (content - 1) * self.n_segments + 1 # This gives the first segment of the content.
             log = (req_counter >= self.n_warmup)
             event = {'receiver': receiver, 'content': content, 'n_segments': self.n_segments, 'time_interval': self.time_interval, 'log': log}
             yield (t_event, event)
-            # If it is not the last segment, append the event for next segment.
+            # If it is not the last segment, append the event (to heapq) for next segment.
             if event['content'] % self.n_segments != 0:
                 new_event_time = t_event + self.delay
                 new_event = copy.copy(event)

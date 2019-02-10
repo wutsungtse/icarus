@@ -48,23 +48,23 @@ DATA_COLLECTORS = [
 N_CONTENTS = 1
 
 # Numer of segments per content object
-N_SEGMENTS = 1
+N_SEGMENTS = 5000
 
-TIME_INTERVALS = [#1, 60, 
-                  None,
+TIME_INTERVALS = [60
+                  #None,
                   ]
 
 N_CONTENTS = N_CONTENTS * N_SEGMENTS
 
 # Number of content requests generated to pre-populate the caches
 # These requests are not logged
-N_WARMUP_REQUESTS = 1000
+N_WARMUP_REQUESTS = 250
 
 # Number of content requests that are measured after warmup
-N_MEASURED_REQUESTS = 1000
+N_MEASURED_REQUESTS = 500
 
 # Number of requests per second (over the whole network)
-REQ_RATE = 1.0
+REQ_RATE = 10.0
 
 # Cache eviction policy
 CACHE_POLICY = 'LRU'
@@ -75,7 +75,7 @@ ALPHA = [1.0]
 # Total size of network cache as a fraction of content population
 # Remove sizes not needed
 NETWORK_CACHE = [0.001, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-NETWORK_CACHE = [1]
+NETWORK_CACHE = [0.5]
 
 # Total cache budget
 # cache_budget = [nCache_budget, uCache_budget]
@@ -99,9 +99,9 @@ STRATEGIES = [
     # 'LCE',                 # Leave Copy Everywhere
     # 'LCE_USER_ASSISTED',   # Leave Copy Everywhere User-Assisted
     # 'C_RANDOM',
-    #'C_LFR_UM',           # Centralised Largest Future Request First with User-Matching
-    #'C_LCF_UM',           # Centralised Least Cached First with User-Matching
-    'C_RANDOM_UM',        # Centralised Random with User-Matching
+    'C_LFR_UM',           # Centralised Largest Future Request First with User-Matching
+    'C_LCF_UM',           # Centralised Least Cached First with User-Matching
+    #'C_RANDOM_UM',        # Centralised Random with User-Matching
 ]
 
 # Instantiate experiment queue
