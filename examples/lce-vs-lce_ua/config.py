@@ -51,7 +51,6 @@ N_CONTENTS = 1
 N_SEGMENTS = 5000
 
 TIME_INTERVALS = [60
-                  #None,
                   ]
 
 N_CONTENTS = N_CONTENTS * N_SEGMENTS
@@ -61,10 +60,10 @@ N_CONTENTS = N_CONTENTS * N_SEGMENTS
 N_WARMUP_REQUESTS = 250
 
 # Number of content requests that are measured after warmup
-N_MEASURED_REQUESTS = 500
+N_MEASURED_REQUESTS = 750
 
 # Number of requests per second (over the whole network)
-REQ_RATE = 10.0
+REQ_RATE = 100.0
 
 # Cache eviction policy
 CACHE_POLICY = 'LRU'
@@ -75,7 +74,6 @@ ALPHA = [1.0]
 # Total size of network cache as a fraction of content population
 # Remove sizes not needed
 NETWORK_CACHE = [0.001, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
-NETWORK_CACHE = [0.5]
 
 # Total cache budget
 # cache_budget = [nCache_budget, uCache_budget]

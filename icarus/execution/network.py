@@ -79,7 +79,7 @@ class NetworkView(object):
                              'NetworkModel')
         self.model = model
 
-    def is_cache_full(self, node):
+    def cache_is_full(self, node):
         if node in self.model.cache:
             current_len = self.model.cache[node].__len__()
             max_len = self.model.cache[node]._maxlen
@@ -89,6 +89,28 @@ class NetworkView(object):
                 return False
             else:
                 print "ERROR!"
+
+    def most_downloaded_content(self, node, session_content):
+        if node in self.model.cache:
+            most_downloaded_content = session_content
+            highest_download_count = self.model.user_download_table[session_content]
+            for content in self.model.cache[node].dump():
+                download_count = self.model.user_download_table[content]
+                if download_count > highest_download_count:
+                    highest_download_count = download_count
+                    most_downloaded_content = content
+            return most_downloaded_content
+
+    def most_cached_content(self, node, session_content):
+        if node in self.model.cache:
+            most_cached_content = session_content
+            highest_cache_count = self.model.user_cache_table[session_content]
+            for content in self.model.cache[node].dump():
+                cache_count = self.model.user_cache_table[content]
+                if cache_count > highest_cache_count:
+                    highest_cache_count = cache_count
+                    most_cached_content = content
+            return most_cached_content
 
     def download_counts(self, content):
         """Return the number of times which the content has been downloaded """
