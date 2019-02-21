@@ -96,7 +96,7 @@ class NetworkView(object):
             highest_download_count = self.model.user_download_table[session_content]
             for content in self.model.cache[node].dump():
                 download_count = self.model.user_download_table[content]
-                if download_count > highest_download_count:
+                if download_count >= highest_download_count:
                     highest_download_count = download_count
                     most_downloaded_content = content
             return most_downloaded_content
@@ -107,7 +107,7 @@ class NetworkView(object):
             highest_cache_count = self.model.user_cache_table[session_content]
             for content in self.model.cache[node].dump():
                 cache_count = self.model.user_cache_table[content]
-                if cache_count > highest_cache_count:
+                if cache_count >= highest_cache_count:
                     highest_cache_count = cache_count
                     most_cached_content = content
             return most_cached_content
@@ -759,6 +759,10 @@ class NetworkController(object):
             if self.session['log']:
                 self.collector.cache_evict(node)
             return self.model.cache[node].remove(content)
+
+    def go_offline(self, node):
+        if node in self.model.cache:
+            self.model.cache[node].clear()
 
     def end_session(self, success=True):
         """Close a session

@@ -40,6 +40,8 @@ class Centralised_LeastCachedFirst_UM(Strategy):
         # Check if the receiver has already cached the content.
         if self.view.has_cache(receiver):
             if self.controller.get_content(receiver):
+                if content % n_segments == 0:
+                    self.controller.go_offline(receiver)
                 self.controller.end_session()
                 return None
         # Receiver does not cache the content, get all required data.
@@ -62,13 +64,16 @@ class Centralised_LeastCachedFirst_UM(Strategy):
         path = list(reversed(path))
         for u, v in path_links(path):
             self.controller.forward_content_hop(u, v)
-        if self.view.cache_is_full(receiver):
-            most_cached_content = self.view.most_cached_content(receiver, content)
-            if most_cached_content != content:
-                self.controller.remove_content_by_choice(receiver, most_cached_content)
-                self.controller.put_content(receiver)
+        if content % n_segments == 0:
+            self.controller.go_offline(receiver)
         else:
-            self.controller.put_content(receiver)
+            if self.view.cache_is_full(receiver):
+                most_cached_content = self.view.most_cached_content(receiver, content)
+                if most_cached_content != content:
+                    self.controller.remove_content_by_choice(receiver, most_cached_content)
+                    self.controller.put_content(receiver)
+            else:
+                self.controller.put_content(receiver)
         self.controller.end_session()
 
 @register_strategy('C_LFR_UM')
@@ -86,6 +91,8 @@ class Centralised_LargestFutureRequestFirst_UM(Strategy):
         # Check if the receiver has already cached the content.
         if self.view.has_cache(receiver):
             if self.controller.get_content(receiver):
+                if content % n_segments == 0:
+                    self.controller.go_offline(receiver)
                 self.controller.end_session()
                 return None
         # Receiver does not cache the content, get all required data.
@@ -108,13 +115,16 @@ class Centralised_LargestFutureRequestFirst_UM(Strategy):
         path = list(reversed(path))
         for u, v in path_links(path):
             self.controller.forward_content_hop(u, v)
-        if self.view.cache_is_full(receiver):
-            most_downloaded_content = self.view.most_downloaded_content(receiver, content)
-            if most_downloaded_content != content:
-                self.controller.remove_content_by_choice(receiver, most_downloaded_content)
+        if content % n_segments == 0:
+            self.controller.go_offline(receiver)
+        else:    
+            if self.view.cache_is_full(receiver):
+                most_downloaded_content = self.view.most_downloaded_content(receiver, content)
+                if most_downloaded_content != content:
+                    self.controller.remove_content_by_choice(receiver, most_downloaded_content)
+                    self.controller.put_content(receiver)
+            else:
                 self.controller.put_content(receiver)
-        else:
-            self.controller.put_content(receiver)
         self.controller.end_session()
 
 @register_strategy('C_RANDOM_UM')
@@ -131,6 +141,8 @@ class Centralised_Random_UM(Strategy):
         # Check if the receiver has already cached the content.
         if self.view.has_cache(receiver):
             if self.controller.get_content(receiver):
+                if content % n_segments == 0:
+                    self.controller.go_offline(receiver)
                 self.controller.end_session()
                 return None
         # Receiver does not cache the content, get all required data.
@@ -153,9 +165,12 @@ class Centralised_Random_UM(Strategy):
         path = list(reversed(path))
         for u, v in path_links(path):
             self.controller.forward_content_hop(u, v)
-        if self.view.cache_is_full(receiver):
-            self.controller.remove_content_by_random(receiver)
-        self.controller.put_content(receiver)
+        if content % n_segments == 0:
+            self.controller.go_offline(receiver)
+        else:
+            if self.view.cache_is_full(receiver):
+                self.controller.remove_content_by_random(receiver)
+            self.controller.put_content(receiver)
         self.controller.end_session()
 
 @register_strategy('C_RANDOM')
@@ -187,7 +202,7 @@ class Centralised_Random(Strategy):
         for u, v in path_links(path):
             self.controller.forward_content_hop(u, v)
         # If receiver's cache is full, evict a content by random.
-        if self.view.is_cache_full(receiver):
+        if self.view.cache_is_full(receiver):
             self.controller.remove_content_by_random(receiver)
         # Insert content.
         self.controller.put_content(receiver)

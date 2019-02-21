@@ -50,7 +50,7 @@ N_CONTENTS = 1
 # Numer of segments per content object
 N_SEGMENTS = 5000
 
-TIME_INTERVALS = [60
+TIME_INTERVALS = [1
                   ]
 
 N_CONTENTS = N_CONTENTS * N_SEGMENTS
@@ -63,7 +63,7 @@ N_WARMUP_REQUESTS = 250
 N_MEASURED_REQUESTS = 750
 
 # Number of requests per second (over the whole network)
-REQ_RATE = 100.0
+REQ_RATE = 10.0
 
 # Cache eviction policy
 CACHE_POLICY = 'LRU'
@@ -99,7 +99,7 @@ STRATEGIES = [
     # 'C_RANDOM',
     'C_LFR_UM',           # Centralised Largest Future Request First with User-Matching
     'C_LCF_UM',           # Centralised Least Cached First with User-Matching
-    #'C_RANDOM_UM',        # Centralised Random with User-Matching
+    'C_RANDOM_UM',        # Centralised Random with User-Matching
 ]
 
 # Instantiate experiment queue
