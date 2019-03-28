@@ -10,38 +10,38 @@ from icarus.util import inheritdoc, path_links
 from .base import Strategy
 
 __all__ = [
-       'Centralised_LeastCachedFirst_UM', # Last Modified: 2018.12.13
-       'Centralised_LargestFutureRequestFirst_UM', # Last Modified: 2018.12.13
-       'Centralised_Random', # Last Modified: 2018.12.05
-       'Centralised_Random_UM', # Last Modified: 2018.12.05
-       'Partition',
-       'Edge',
-       'LeaveCopyEverywhere',
-       'LeaveCopyEverywhere_UserAssisted', # Last Modified: 2018.10.29
-       'LeaveCopyDown',
-       'ProbCache',
-       'CacheLessForMore',
-       'RandomBernoulli',
-       'RandomChoice',
+        'Distributed_Approach_UM',
+        'Centralised_LeastCachedFirst_UM', # Last Modified: 2018.12.13
+        'Centralised_LargestFutureRequestFirst_UM', # Last Modified: 2018.12.13
+        'Centralised_Random', # Last Modified: 2018.12.05
+        'Centralised_Random_UM', # Last Modified: 2018.12.05
+        'Partition',
+        'Edge',
+        'LeaveCopyEverywhere',
+        'LeaveCopyEverywhere_UserAssisted', # Last Modified: 2018.10.29
+        'LeaveCopyDown',
+        'ProbCache',
+        'CacheLessForMore',
+        'RandomBernoulli',
+        'RandomChoice',
            ]
 
-@register_strategy('C_LCF_UM')
-class Centralised_LeastCachedFirst_UM(Strategy):
+@register_strategy('DISTRIBUTED_APPROACH')
+class Distributed_Approach_UM(Strategy):
 
     @inheritdoc(Strategy)
     def __init__(self, view, controller, **kwargs):
-        super(Centralised_LeastCachedFirst_UM, self).__init__(view, controller)
+        super(Distributed_Approach_UM, self).__init__(view, controller)
 
     @inheritdoc(Strategy)
     def process_event(self, time, receiver, content, n_segments, time_interval, log):
-        self.controller.update_user_cache_table(time, time_interval)
         # Start session.
         self.controller.start_session(time, receiver, content, log)
         # Check if the receiver has already cached the content.
         if self.view.has_cache(receiver):
             if self.controller.get_content(receiver):
                 if content % n_segments == 0:
-                    self.controller.go_offline(receiver)
+                    self.controller.user_go_offline(receiver, content, n_segments)
                 self.controller.end_session()
                 return None
         # Receiver does not cache the content, get all required data.
@@ -65,7 +65,52 @@ class Centralised_LeastCachedFirst_UM(Strategy):
         for u, v in path_links(path):
             self.controller.forward_content_hop(u, v)
         if content % n_segments == 0:
-            self.controller.go_offline(receiver)
+            self.controller.user_go_offline(receiver, content, n_segments)
+        else:
+            self.controller.put_content(receiver)
+        self.controller.end_session()
+
+@register_strategy('C_LCF_UM')
+class Centralised_LeastCachedFirst_UM(Strategy):
+
+    @inheritdoc(Strategy)
+    def __init__(self, view, controller, **kwargs):
+        super(Centralised_LeastCachedFirst_UM, self).__init__(view, controller)
+
+    @inheritdoc(Strategy)
+    def process_event(self, time, receiver, content, n_segments, time_interval, log):
+        self.controller.update_user_cache_table(time, time_interval)
+        # Start session.
+        self.controller.start_session(time, receiver, content, log)
+        # Check if the receiver has already cached the content.
+        if self.view.has_cache(receiver):
+            if self.controller.get_content(receiver):
+                if content % n_segments == 0:
+                    self.controller.user_go_offline(receiver, content, n_segments)
+                self.controller.end_session()
+                return None
+        # Receiver does not cache the content, get all required data.
+        content_locations = list(self.view.content_locations(content))
+        # print ("Content locations: " + str(content_locations) + " for " + str(segment))
+        destination = content_locations[0]
+        path = self.view.shortest_path(receiver, destination)
+        # Find the nearest content location and the corresponding shortest path.
+        for content_location in content_locations:
+            current_path = self.view.shortest_path(receiver, content_location)
+            if len(current_path) < len(path):
+                path = current_path
+                destination = content_location
+        # Route request to destination.
+        for u, v in path_links(path):
+            self.controller.forward_request_hop(u, v)
+        # Get content from destination.
+        self.controller.get_content(destination)
+        # Route content to receiver.
+        path = list(reversed(path))
+        for u, v in path_links(path):
+            self.controller.forward_content_hop(u, v)
+        if content % n_segments == 0:
+            self.controller.user_go_offline(receiver, content, n_segments)
         else:
             if self.view.cache_is_full(receiver):
                 most_cached_content = self.view.most_cached_content(receiver, content)
@@ -92,7 +137,7 @@ class Centralised_LargestFutureRequestFirst_UM(Strategy):
         if self.view.has_cache(receiver):
             if self.controller.get_content(receiver):
                 if content % n_segments == 0:
-                    self.controller.go_offline(receiver)
+                    self.controller.user_go_offline(receiver, content, n_segments)
                 self.controller.end_session()
                 return None
         # Receiver does not cache the content, get all required data.
@@ -116,8 +161,8 @@ class Centralised_LargestFutureRequestFirst_UM(Strategy):
         for u, v in path_links(path):
             self.controller.forward_content_hop(u, v)
         if content % n_segments == 0:
-            self.controller.go_offline(receiver)
-        else:    
+            self.controller.user_go_offline(receiver, content, n_segments)
+        else:
             if self.view.cache_is_full(receiver):
                 most_downloaded_content = self.view.most_downloaded_content(receiver, content)
                 if most_downloaded_content != content:
@@ -142,7 +187,7 @@ class Centralised_Random_UM(Strategy):
         if self.view.has_cache(receiver):
             if self.controller.get_content(receiver):
                 if content % n_segments == 0:
-                    self.controller.go_offline(receiver)
+                    self.controller.user_go_offline(receiver, content, n_segments)
                 self.controller.end_session()
                 return None
         # Receiver does not cache the content, get all required data.
@@ -166,7 +211,7 @@ class Centralised_Random_UM(Strategy):
         for u, v in path_links(path):
             self.controller.forward_content_hop(u, v)
         if content % n_segments == 0:
-            self.controller.go_offline(receiver)
+            self.controller.user_go_offline(receiver, content, n_segments)            
         else:
             if self.view.cache_is_full(receiver):
                 self.controller.remove_content_by_random(receiver)

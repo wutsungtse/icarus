@@ -21,6 +21,7 @@ __all__ = [
         'NullCache',
         'BeladyMinCache',
         'LruCache',
+        'MruCache',
         'SegmentedLruCache',
         'InCacheLfuCache',
         'PerfectLfuCache',
@@ -921,6 +922,66 @@ class LruCache(Cache):
     def clear(self):
         self._cache.clear()
 
+
+@register_cache_policy('MRU')
+class MruCache(Cache):
+
+    @inheritdoc(Cache)
+    def __init__(self, maxlen, **kwargs):
+        self._cache = LinkedSet()
+        self._maxlen = int(maxlen)
+        if self._maxlen <= 0:
+            raise ValueError('maxlen must be positive')
+
+    @inheritdoc(Cache)
+    def __len__(self):
+        return len(self._cache)
+
+    @property
+    @inheritdoc(Cache)
+    def maxlen(self):
+        return self._maxlen
+
+    @inheritdoc(Cache)
+    def dump(self):
+        return list(iter(self._cache))
+
+    def position(self, k, *args, **kwargs):
+        if not k in self._cache:
+            raise ValueError('The item %s is not in the cache' % str(k))
+        return self._cache.index(k)
+
+    @inheritdoc(Cache)
+    def has(self, k, *args, **kwargs):
+        return k in self._cache
+
+    @inheritdoc(Cache)
+    def get(self, k, *args, **kwargs):
+        # search content over the list
+        # if it has it push on top, otherwise return false
+        if k not in self._cache:
+            return False
+        self._cache.move_to_top(k)
+        return True
+
+    def put(self, k, *args, **kwargs):
+        if k in self._cache:
+            self._cache.move_to_top(k)
+            return None
+        evicted_content = self._cache.pop_top() if len(self._cache) == self._maxlen else None
+        self._cache.append_top(k)
+        return evicted_content
+
+    @inheritdoc(Cache)
+    def remove(self, k, *args, **kwargs):
+        if k not in self._cache:
+            return False
+        self._cache.remove(k)
+        return True
+
+    @inheritdoc(Cache)
+    def clear(self):
+        self._cache.clear()
 
 @register_cache_policy('SLRU')
 class SegmentedLruCache(Cache):

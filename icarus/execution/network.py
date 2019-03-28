@@ -760,9 +760,10 @@ class NetworkController(object):
                 self.collector.cache_evict(node)
             return self.model.cache[node].remove(content)
 
-    def go_offline(self, node):
+    def user_go_offline(self, node, segment, n_segments):
         if node in self.model.cache:
-            self.model.cache[node].clear()
+            for s in range(segment-n_segments+1, segment+1):
+                self.model.cache[node].remove(s)
 
     def end_session(self, success=True):
         """Close a session

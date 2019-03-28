@@ -97,7 +97,7 @@ class StationaryWorkload(object):
         self.n_contents = n_contents
         self.n_segments = n_segments
         self.contents = range(1, n_contents+1) # A list of all segments.
-        self.delay = 0.001
+        self.delay = 0.01
         self.alpha = alpha
         self.rate = rate
         self.n_warmup = n_warmup

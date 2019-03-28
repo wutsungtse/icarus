@@ -31,11 +31,11 @@ N_REPLICATIONS = 1
 # Remove collectors not needed
 DATA_COLLECTORS = [
            'CACHE_HIT_RATIO',  # Measure cache hit ratio
-           'LATENCY',  # Measure request and response latency (based on static link delays)
+           #'LATENCY',  # Measure request and response latency (based on static link delays)
            'OVERHEAD_DISTRIBUTION', # Coefficient of Variation on Cache Hits
-           'CACHE_EVICTION', # Average number of evictions per uCache
-           'CACHING_EFFICIENCY',
-           'SEGMENT_PERFORMANCE_DIFFERENCE', 
+           #'CACHE_EVICTION', # Average number of evictions per uCache
+           #'CACHING_EFFICIENCY',
+           #'SEGMENT_PERFORMANCE_DIFFERENCE', 
                    ]
 
 
@@ -45,28 +45,31 @@ DATA_COLLECTORS = [
 # Default experiment values, i.e. values shared by all experiments
 
 # Number of content objects
-N_CONTENTS = 1
+N_CONTENTS = 100
 
 # Numer of segments per content object
-N_SEGMENTS = 5000
+N_SEGMENTS = 100
 
-TIME_INTERVALS = [1
+TIME_INTERVALS = [5
                   ]
 
 N_CONTENTS = N_CONTENTS * N_SEGMENTS
 
 # Number of content requests generated to pre-populate the caches
 # These requests are not logged
-N_WARMUP_REQUESTS = 250
+N_WARMUP_REQUESTS = 20000
 
 # Number of content requests that are measured after warmup
-N_MEASURED_REQUESTS = 750
+N_MEASURED_REQUESTS = 20000
 
 # Number of requests per second (over the whole network)
-REQ_RATE = 10.0
+REQ_RATE = 1000.0
 
 # Cache eviction policy
-CACHE_POLICY = 'LRU'
+CACHE_POLICIES = ['LRU',
+                  #'RAND',
+                  #'MRU'
+                  ]
 
 # Zipf alpha parameter, remove parameters not needed
 ALPHA = [1.0]
@@ -99,7 +102,8 @@ STRATEGIES = [
     # 'C_RANDOM',
     'C_LFR_UM',           # Centralised Largest Future Request First with User-Matching
     'C_LCF_UM',           # Centralised Least Cached First with User-Matching
-    'C_RANDOM_UM',        # Centralised Random with User-Matching
+    #'C_RANDOM_UM',        # Centralised Random with User-Matching
+    #'DISTRIBUTED_APPROACH'
 ]
 
 # Instantiate experiment queue
@@ -121,26 +125,26 @@ default['content_placement'] = {'name':       'UNIFORM',
                                 'n_contents': N_CONTENTS,
                                 'n_segments': N_SEGMENTS}
 
-default['cache_policy']['name'] = CACHE_POLICY
-
 default['topology'] = {'asn':  3257,  # Tiscali (Europe)
                       }
 
 # Create experiments multiplexing all desired parameters
 for alpha in ALPHA:
-    for strategy in STRATEGIES:
-        for topology in TOPOLOGIES:
-          for time_interval in TIME_INTERVALS:
-            for cache_budget_factor in CACHE_BUDGET_FACTORS:
-              for network_cache in NETWORK_CACHE:
-                  experiment = copy.deepcopy(default)
-                  experiment['workload']['alpha'] = alpha
-                  experiment['workload']['time_interval'] = time_interval
-                  experiment['strategy']['name'] = strategy
-                  experiment['topology']['name'] = topology
-                  experiment['cache_placement']['nCache_budget'] = cache_budget_factor[0] * N_CONTENTS * 161 * 0.1
-                  experiment['cache_placement']['uCache_budget'] = cache_budget_factor[1] * N_CONTENTS * 161 * network_cache
-                  experiment['cache_placement']['network_cache'] = network_cache
-                  experiment['desc'] = "strategy: %s, time interval: %s, network cache: %s" \
-                                       % (strategy, str(time_interval), str(network_cache))
-                  EXPERIMENT_QUEUE.append(experiment)
+  for cache_policy in CACHE_POLICIES:
+      for strategy in STRATEGIES:
+          for topology in TOPOLOGIES:
+            for time_interval in TIME_INTERVALS:
+              for cache_budget_factor in CACHE_BUDGET_FACTORS:
+                for network_cache in NETWORK_CACHE:
+                    experiment = copy.deepcopy(default)
+                    experiment['workload']['alpha'] = alpha
+                    experiment['workload']['time_interval'] = time_interval
+                    experiment['strategy']['name'] = strategy
+                    experiment['cache_policy']['name'] = cache_policy
+                    experiment['topology']['name'] = topology
+                    experiment['cache_placement']['nCache_budget'] = cache_budget_factor[0] * N_CONTENTS * 0.1
+                    experiment['cache_placement']['uCache_budget'] = cache_budget_factor[1] * N_CONTENTS * network_cache
+                    experiment['cache_placement']['network_cache'] = network_cache
+                    experiment['desc'] = "%s|%s|%ss, network cache: %s" \
+                                         % (strategy, cache_policy, time_interval, str(network_cache))
+                    EXPERIMENT_QUEUE.append(experiment)
